@@ -126,6 +126,21 @@ def test_generate_raises_ollama_unavailable_on_non_object_json_body(monkeypatch)
         ai._generate("hello", as_json=False)
 
 
+def test_generate_raises_ollama_unavailable_on_non_decodable_response_body(monkeypatch):
+    req = httpx.Request("POST", "http://localhost:11434/api/generate")
+    resp = httpx.Response(
+        200,
+        content=b"\xff\xfe\x00\x01garbage-not-utf8-\x80\x81",
+        headers={"content-type": "application/json"},
+        request=req,
+    )
+
+    monkeypatch.setattr(ai.httpx, "post", lambda *args, **kwargs: resp)
+
+    with pytest.raises(ai.OllamaUnavailable):
+        ai._generate("hello", as_json=False)
+
+
 @pytest.mark.slow
 def test_parse_task_against_the_real_model():
     result = ai.parse_task("remind me to call the dentist tomorrow, it is urgent")

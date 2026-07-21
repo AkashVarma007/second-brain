@@ -43,7 +43,7 @@ def _generate(prompt: str, *, as_json: bool) -> str:
         raise OllamaUnavailable(f"Ollama request failed: {exc}") from exc
     try:
         return str(response.json().get("response", "")).strip()
-    except (json.JSONDecodeError, AttributeError) as exc:
+    except (ValueError, AttributeError) as exc:
         raise OllamaUnavailable(f"Ollama returned an unusable response body: {exc}") from exc
 
 
