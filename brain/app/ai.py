@@ -41,7 +41,10 @@ def _generate(prompt: str, *, as_json: bool) -> str:
         response.raise_for_status()
     except httpx.HTTPError as exc:
         raise OllamaUnavailable(f"Ollama request failed: {exc}") from exc
-    return str(response.json().get("response", "")).strip()
+    try:
+        return str(response.json().get("response", "")).strip()
+    except (json.JSONDecodeError, AttributeError) as exc:
+        raise OllamaUnavailable(f"Ollama returned an unusable response body: {exc}") from exc
 
 
 def clean_note(text: str) -> str:

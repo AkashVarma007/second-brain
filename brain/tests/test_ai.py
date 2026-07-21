@@ -1,3 +1,5 @@
+import json
+
 import httpx
 import pytest
 
@@ -68,11 +70,57 @@ def test_parse_task_falls_back_when_title_missing(monkeypatch):
     }
 
 
+def test_parse_task_falls_back_when_model_returns_json_array(monkeypatch):
+    monkeypatch.setattr(ai, "_generate", _fake_generate("[1, 2, 3]"))
+
+    assert ai.parse_task("water the plants") == {
+        "title": "water the plants",
+        "priority": "medium",
+    }
+
+
+def test_parse_task_falls_back_when_model_returns_json_null(monkeypatch):
+    monkeypatch.setattr(ai, "_generate", _fake_generate("null"))
+
+    assert ai.parse_task("water the plants") == {
+        "title": "water the plants",
+        "priority": "medium",
+    }
+
+
 def test_generate_raises_ollama_unavailable_on_connection_error(monkeypatch):
     def _boom(*args, **kwargs):
         raise httpx.ConnectError("connection refused")
 
     monkeypatch.setattr(ai.httpx, "post", _boom)
+
+    with pytest.raises(ai.OllamaUnavailable):
+        ai._generate("hello", as_json=False)
+
+
+def test_generate_raises_ollama_unavailable_on_malformed_json_body(monkeypatch):
+    class _FakeResponse:
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            raise json.JSONDecodeError("Expecting value", "not json", 0)
+
+    monkeypatch.setattr(ai.httpx, "post", lambda *args, **kwargs: _FakeResponse())
+
+    with pytest.raises(ai.OllamaUnavailable):
+        ai._generate("hello", as_json=False)
+
+
+def test_generate_raises_ollama_unavailable_on_non_object_json_body(monkeypatch):
+    class _FakeResponse:
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return [1, 2, 3]
+
+    monkeypatch.setattr(ai.httpx, "post", lambda *args, **kwargs: _FakeResponse())
 
     with pytest.raises(ai.OllamaUnavailable):
         ai._generate("hello", as_json=False)
