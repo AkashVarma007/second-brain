@@ -1,0 +1,50 @@
+# ---- Python (brain/) ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+.env
+.pytest_cache/
+
+# Whisper / model caches + downloaded models
+*.bin
+*.pt
+*.onnx
+models/
+.cache/
+
+# ---- Node / React (web/) ----
+node_modules/
+dist/
+dist-ssr/
+.vite/
+*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ---- PlatformIO / firmware ----
+.pio/
+.pioenvs/
+.piolibdeps/
+firmware/.pio/
+
+# ---- Databases / runtime data ----
+*.sqlite
+*.sqlite3
+*.db
+
+# ---- Recordings / uploads (keep small committed samples out of history) ----
+recordings/
+uploads/
+
+# ---- Editors / OS ----
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
