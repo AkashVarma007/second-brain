@@ -4,6 +4,7 @@ import tempfile
 from contextlib import asynccontextmanager
 from pathlib import Path
 
+from av import FFmpegError
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
@@ -45,7 +46,12 @@ def _require_mode(mode: str) -> str:
 
 
 def _run_pipeline(audio_path: Path, mode: str) -> ProcessResponse:
-    transcript = transcribe.transcribe_file(audio_path)
+    try:
+        transcript = transcribe.transcribe_file(audio_path)
+    except FFmpegError as exc:
+        raise HTTPException(
+            status_code=400, detail=f"Could not decode audio upload: {exc}"
+        ) from exc
     if not transcript:
         raise HTTPException(status_code=422, detail="No speech detected in audio")
 

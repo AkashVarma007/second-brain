@@ -1,6 +1,7 @@
 import io
 
 import pytest
+from av import InvalidDataError
 from fastapi.testclient import TestClient
 
 from app import ai, config, main, transcribe
@@ -16,6 +17,22 @@ def client(tmp_path, monkeypatch):
         ai, "parse_task", lambda text: {"title": "Buy milk", "priority": "high"}
     )
     with TestClient(main.app) as test_client:
+        yield test_client
+
+
+@pytest.fixture
+def client_allow_500(tmp_path, monkeypatch):
+    """Same setup as `client`, but built with raise_server_exceptions=False so
+    an unhandled server exception comes back as a 500 response instead of
+    propagating into the test (TestClient's default behaviour)."""
+    monkeypatch.setattr(config, "DB_PATH", tmp_path / "test.sqlite3")
+    monkeypatch.setattr(config, "SAMPLE_WAV", tmp_path / "sample.wav")
+    monkeypatch.setattr(transcribe, "transcribe_file", lambda path: "buy milk tomorrow")
+    monkeypatch.setattr(ai, "clean_note", lambda text: "Buy milk tomorrow.")
+    monkeypatch.setattr(
+        ai, "parse_task", lambda text: {"title": "Buy milk", "priority": "high"}
+    )
+    with TestClient(main.app, raise_server_exceptions=False) as test_client:
         yield test_client
 
 
@@ -89,6 +106,20 @@ def test_process_rejects_invalid_mode(client):
     assert "mode" in response.json()["detail"].lower()
 
 
+def test_process_rejects_undecodable_audio(client, monkeypatch):
+    def _boom(path):
+        raise InvalidDataError(
+            1094995529, "Invalid data found when processing input", str(path)
+        )
+
+    monkeypatch.setattr(transcribe, "transcribe_file", _boom)
+
+    response = client.post("/process", files=_wav_upload(), data={"mode": "note"})
+
+    assert response.status_code == 400
+    assert "audio" in response.json()["detail"].lower()
+
+
 def test_process_returns_422_when_no_speech_detected(client, monkeypatch):
     monkeypatch.setattr(transcribe, "transcribe_file", lambda path: "")
 
@@ -106,6 +137,22 @@ def test_process_returns_503_when_ollama_is_down(client, monkeypatch):
     response = client.post("/process", files=_wav_upload(), data={"mode": "note"})
 
     assert response.status_code == 503
+
+
+def test_process_returns_500_when_transcription_fails_unexpectedly(
+    client_allow_500, monkeypatch
+):
+    def _boom(path):
+        raise RuntimeError("model failed to load")
+
+    monkeypatch.setattr(transcribe, "transcribe_file", _boom)
+
+    response = client_allow_500.post(
+        "/process", files=_wav_upload(), data={"mode": "note"}
+    )
+
+    assert response.status_code == 500
+    assert "model failed to load" not in response.text
 
 
 def test_process_sample_returns_404_when_sample_missing(client):
