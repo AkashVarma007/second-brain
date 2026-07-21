@@ -1,3 +1,5 @@
+import pytest
+
 from app import storage
 
 
@@ -33,6 +35,28 @@ def test_save_task_persists_priority(tmp_path):
     assert saved.id == 1
     assert tasks[0].title == "Call the dentist"
     assert tasks[0].priority == "high"
+
+
+def test_save_task_rejects_invalid_priority(tmp_path):
+    db = tmp_path / "test.sqlite3"
+    storage.init_db(db)
+
+    with pytest.raises(ValueError):
+        storage.save_task(db, "Call the dentist", "urgent")
+
+    assert storage.list_tasks(db) == []
+
+
+def test_save_task_accepts_all_valid_priorities(tmp_path):
+    db = tmp_path / "test.sqlite3"
+    storage.init_db(db)
+
+    for priority in ("high", "medium", "low"):
+        saved = storage.save_task(db, f"Task {priority}", priority)
+        assert saved.priority == priority
+
+    tasks = storage.list_tasks(db)
+    assert [task.priority for task in tasks] == ["low", "medium", "high"]
 
 
 def test_lists_are_empty_on_fresh_db(tmp_path):

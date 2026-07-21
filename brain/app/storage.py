@@ -7,7 +7,13 @@ from pathlib import Path
 
 from app.models import NoteOut, TaskOut
 
-SCHEMA = """
+# Single source of truth for valid task priorities: used both for the
+# in-Python guard in save_task() and to build the SQLite CHECK constraint
+# below, so the literal values ("high", "medium", "low") appear exactly once.
+VALID_PRIORITIES = ("high", "medium", "low")
+_PRIORITY_SQL_LIST = ", ".join(f"'{p}'" for p in VALID_PRIORITIES)
+
+SCHEMA = f"""
 CREATE TABLE IF NOT EXISTS notes (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     text TEXT NOT NULL,
@@ -16,7 +22,7 @@ CREATE TABLE IF NOT EXISTS notes (
 CREATE TABLE IF NOT EXISTS tasks (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     title TEXT NOT NULL,
-    priority TEXT NOT NULL,
+    priority TEXT NOT NULL CHECK (priority IN ({_PRIORITY_SQL_LIST})),
     created_at TEXT NOT NULL
 );
 """
@@ -48,6 +54,10 @@ def save_note(db_path: Path | str, text: str) -> NoteOut:
 
 
 def save_task(db_path: Path | str, title: str, priority: str) -> TaskOut:
+    if priority not in VALID_PRIORITIES:
+        raise ValueError(
+            f"invalid priority {priority!r}: must be one of {VALID_PRIORITIES}"
+        )
     created_at = _now()
     with closing(_connect(db_path)) as conn, conn:
         cursor = conn.execute(
