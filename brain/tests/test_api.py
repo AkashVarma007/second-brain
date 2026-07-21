@@ -1,0 +1,123 @@
+import io
+
+import pytest
+from fastapi.testclient import TestClient
+
+from app import ai, config, main, transcribe
+
+
+@pytest.fixture
+def client(tmp_path, monkeypatch):
+    monkeypatch.setattr(config, "DB_PATH", tmp_path / "test.sqlite3")
+    monkeypatch.setattr(config, "SAMPLE_WAV", tmp_path / "sample.wav")
+    monkeypatch.setattr(transcribe, "transcribe_file", lambda path: "buy milk tomorrow")
+    monkeypatch.setattr(ai, "clean_note", lambda text: "Buy milk tomorrow.")
+    monkeypatch.setattr(
+        ai, "parse_task", lambda text: {"title": "Buy milk", "priority": "high"}
+    )
+    with TestClient(main.app) as test_client:
+        yield test_client
+
+
+def _wav_upload() -> dict:
+    return {"audio": ("clip.wav", io.BytesIO(b"RIFFfake-wav-bytes"), "audio/wav")}
+
+
+def test_health_returns_ok(client):
+    response = client.get("/health")
+
+    assert response.status_code == 200
+    assert response.json() == {"status": "ok"}
+
+
+def test_lists_start_empty(client):
+    assert client.get("/notes").json() == []
+    assert client.get("/tasks").json() == []
+
+
+def test_process_note_returns_transcript_and_cleaned_text(client):
+    response = client.post("/process", files=_wav_upload(), data={"mode": "note"})
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "transcript": "buy milk tomorrow",
+        "result": {"text": "Buy milk tomorrow."},
+    }
+
+
+def test_process_note_persists_to_notes(client):
+    client.post("/process", files=_wav_upload(), data={"mode": "note"})
+
+    notes = client.get("/notes").json()
+
+    assert len(notes) == 1
+    assert notes[0]["text"] == "Buy milk tomorrow."
+    assert notes[0]["id"] == 1
+    assert notes[0]["created_at"] != ""
+
+
+def test_process_task_returns_title_and_priority(client):
+    response = client.post("/process", files=_wav_upload(), data={"mode": "task"})
+
+    assert response.status_code == 200
+    assert response.json()["result"] == {"title": "Buy milk", "priority": "high"}
+
+
+def test_process_task_persists_to_tasks(client):
+    client.post("/process", files=_wav_upload(), data={"mode": "task"})
+
+    tasks = client.get("/tasks").json()
+
+    assert len(tasks) == 1
+    assert tasks[0]["title"] == "Buy milk"
+    assert tasks[0]["priority"] == "high"
+
+
+def test_process_rejects_empty_upload(client):
+    files = {"audio": ("clip.wav", io.BytesIO(b""), "audio/wav")}
+
+    response = client.post("/process", files=files, data={"mode": "note"})
+
+    assert response.status_code == 400
+    assert "empty" in response.json()["detail"].lower()
+
+
+def test_process_rejects_invalid_mode(client):
+    response = client.post("/process", files=_wav_upload(), data={"mode": "reminder"})
+
+    assert response.status_code == 400
+    assert "mode" in response.json()["detail"].lower()
+
+
+def test_process_returns_422_when_no_speech_detected(client, monkeypatch):
+    monkeypatch.setattr(transcribe, "transcribe_file", lambda path: "")
+
+    response = client.post("/process", files=_wav_upload(), data={"mode": "note"})
+
+    assert response.status_code == 422
+
+
+def test_process_returns_503_when_ollama_is_down(client, monkeypatch):
+    def _boom(text):
+        raise ai.OllamaUnavailable("connection refused")
+
+    monkeypatch.setattr(ai, "clean_note", _boom)
+
+    response = client.post("/process", files=_wav_upload(), data={"mode": "note"})
+
+    assert response.status_code == 503
+
+
+def test_process_sample_returns_404_when_sample_missing(client):
+    response = client.post("/process-sample", params={"mode": "note"})
+
+    assert response.status_code == 404
+
+
+def test_process_sample_uses_the_configured_sample(client):
+    config.SAMPLE_WAV.write_bytes(b"RIFFfake-wav-bytes")
+
+    response = client.post("/process-sample", params={"mode": "task"})
+
+    assert response.status_code == 200
+    assert response.json()["result"] == {"title": "Buy milk", "priority": "high"}
