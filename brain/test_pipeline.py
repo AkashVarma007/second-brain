@@ -53,17 +53,28 @@ def main() -> int:
         print(f"FAIL: HTTP {response.status_code} — {response.text}")
         return 1
 
-    payload = response.json()
-    print("\n--- transcript ---")
-    print(payload["transcript"])
-    print("\n--- AI result ---")
-    print(json.dumps(payload["result"], indent=2))
+    try:
+        payload = response.json()
+        transcript = payload["transcript"]
+        result = payload["result"]
+    except (ValueError, KeyError, TypeError) as exc:
+        print(f"FAIL: malformed /process response ({exc})")
+        return 1
 
-    if not payload["transcript"].strip():
+    print("\n--- transcript ---")
+    print(transcript)
+    print("\n--- AI result ---")
+    print(json.dumps(result, indent=2))
+
+    if not transcript.strip():
         print("\nFAIL: empty transcript")
         return 1
 
     listing = httpx.get(f"{args.url}/{'notes' if args.mode == 'note' else 'tasks'}", timeout=30)
+    if listing.status_code != 200:
+        print(f"FAIL: listing request failed with HTTP {listing.status_code} — {listing.text}")
+        return 1
+
     print(f"\nStored {args.mode}s now: {len(listing.json())}")
     print("\nPASS: full pipeline works (upload -> whisper -> ollama -> sqlite -> response)")
     return 0
