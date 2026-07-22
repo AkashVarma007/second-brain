@@ -1,14 +1,17 @@
 # Second Brain
 
 > 🚧 **Work in progress — early development.** Personal project under active construction.
-> Phase 1 (the laptop brain + dashboard) is implemented and runs today — see **Status** below.
-> Later phases (simulated device, hardware) are still ahead. Structure and details will change.
+> Phase 1 (the laptop brain + dashboard) runs today; Phase 2 (the simulated ESP32-S3 UI) compiles
+> clean with its navigation logic host-tested and Wokwi project files ready — see **Status** below.
+> Later phases (device↔brain networking, hardware) are still ahead. Structure and details will change.
 
 A voice-driven wearable "second brain." Press a button, speak, and get back a cleaned-up
 **note** or a parsed **task with a priority** — all processed locally, free, no cloud.
 
 > **Status:** 🟢 Phase 1 complete — the laptop brain and monitoring dashboard work end to end.
-> Phases 2–3 (simulated ESP32 UI and device↔brain round-trip) are next; hardware comes after.
+> 🟢 Phase 2 complete — the ESP32-S3 UI (LVGL, 3-button nav) compiles for the Wokwi simulator,
+> with its navigation logic unit-tested on the host; Wokwi project files are included to run it.
+> Phase 3 (device↔brain round-trip over Wi-Fi) is next; hardware comes after.
 > See [`docs/superpowers/specs/2026-07-21-second-brain-design.md`](docs/superpowers/specs/2026-07-21-second-brain-design.md).
 
 ## What it is
@@ -49,7 +52,7 @@ swapped without touching the others:
 | `HARDWARE_BRIEF.md` | Full hardware BOM + open questions (for hardware review) | ✅ done |
 | `brain/` | Python FastAPI server — Whisper + Ollama + SQLite | ✅ Phase 1 |
 | `web/` | React + Vite + TypeScript monitoring dashboard | ✅ Phase 1 |
-| `firmware/` | ESP32-S3 firmware (LVGL UI), runs in Wokwi simulator | ⏳ Phase 2–3 |
+| `firmware/` | ESP32-S3 firmware (LVGL UI), runs in Wokwi simulator | ✅ Phase 2 (sim UI) |
 
 ## Build phases
 
