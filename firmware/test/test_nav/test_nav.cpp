@@ -75,6 +75,25 @@ void test_back_from_home_stays_home(void) {
     TEST_ASSERT_EQUAL_INT((int)Screen::Home, (int)n.ui().screen);
 }
 
+void test_tasklist_down_scrolls_and_wraps(void) {
+    Nav n = make();
+    // Save two tasks so TaskList has more than one row.
+    for (int i = 0; i < 2; ++i) {
+        n.handle(Event::Down);     // Home cursor -> Tasks
+        n.handle(Event::Select);   // TasksMenu
+        n.handle(Event::Select);   // TaskResult
+        n.handle(Event::Select);   // save -> TaskList
+        if (i == 0) n.handle(Event::Back);  // back to Home to add the next
+    }
+    TEST_ASSERT_EQUAL_INT((int)Screen::TaskList, (int)n.ui().screen);
+    TEST_ASSERT_EQUAL_INT(2, (int)n.ui().tasks.size());
+    TEST_ASSERT_EQUAL_INT(0, n.ui().cursor);
+    n.handle(Event::Down);         // 0 -> 1
+    TEST_ASSERT_EQUAL_INT(1, n.ui().cursor);
+    n.handle(Event::Down);         // 1 -> 0 (wraps over 2 tasks)
+    TEST_ASSERT_EQUAL_INT(0, n.ui().cursor);
+}
+
 int main(int, char**) {
     UNITY_BEGIN();
     RUN_TEST(test_starts_on_home);
@@ -84,5 +103,6 @@ int main(int, char**) {
     RUN_TEST(test_back_from_notes_menu_returns_home);
     RUN_TEST(test_tasks_flow_saves_a_task_and_shows_list);
     RUN_TEST(test_back_from_home_stays_home);
+    RUN_TEST(test_tasklist_down_scrolls_and_wraps);
     return UNITY_END();
 }
