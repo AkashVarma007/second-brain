@@ -1,32 +1,30 @@
-# React + TypeScript + Vite
+# Second Brain — Web Dashboard
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+A small monitoring dashboard for the Second Brain: a React + Vite + TypeScript
+UI over the brain's local HTTP API. It shows whether the brain is online,
+lists recent notes and tasks, and can send a sample transcript to be
+processed as either.
 
-Currently, two official plugins are available:
+## Prerequisites
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- Node 22+
+- The Second Brain server running locally on `:8000`
 
-## React Compiler
+## Setup
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+npm install
+npm run dev    # http://localhost:5173
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+`npm run build` type-checks and produces a production build in `dist/`.
+
+## Configuration
+
+The API base URL is read from `VITE_API_BASE` (default
+`http://localhost:8000`). Copy `.env.example` to `.env` to override it.
+
+## API contract
+
+The dashboard consumes the brain's HTTP API through the types in
+`src/protocol.ts`, which mirrors `brain/app/models.py`.
