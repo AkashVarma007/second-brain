@@ -1,7 +1,8 @@
+import errno
 import io
 
 import pytest
-from av import InvalidDataError
+from av import InvalidDataError, MemoryError as AVMemoryError
 from fastapi.testclient import TestClient
 
 from app import ai, config, main, transcribe
@@ -120,6 +121,28 @@ def test_process_rejects_undecodable_audio(client, monkeypatch):
     assert "audio" in response.json()["detail"].lower()
 
 
+def test_process_rejects_undecodable_audio_without_leaking_server_path(
+    client, monkeypatch
+):
+    def _boom(path):
+        raise InvalidDataError(
+            1094995529,
+            "Invalid data found when processing input",
+            "/tmp/tmpf7sw3w_o.wav",
+        )
+
+    monkeypatch.setattr(transcribe, "transcribe_file", _boom)
+
+    response = client.post("/process", files=_wav_upload(), data={"mode": "note"})
+
+    assert response.status_code == 400
+    detail = response.json()["detail"]
+    assert "/tmp" not in detail
+    assert ".wav" not in detail
+    assert "Errno" not in detail
+    assert detail == "Could not decode audio upload: unsupported or corrupt audio format"
+
+
 def test_process_returns_422_when_no_speech_detected(client, monkeypatch):
     monkeypatch.setattr(transcribe, "transcribe_file", lambda path: "")
 
@@ -153,6 +176,27 @@ def test_process_returns_500_when_transcription_fails_unexpectedly(
 
     assert response.status_code == 500
     assert "model failed to load" not in response.text
+
+
+def test_process_returns_500_for_os_resource_failure_during_decode(
+    client_allow_500, monkeypatch
+):
+    """PyAV's `_extend_builtin` errors (OSError, MemoryError, ...) are also
+    `FFmpegError` subclasses, but they signal a genuine server-side failure
+    (e.g. out of memory) rather than undecodable audio content, so they must
+    still surface as a 500, not collapse into the 400 decode-failure path."""
+
+    def _boom(path):
+        raise AVMemoryError(errno.ENOMEM, "Cannot allocate memory")
+
+    monkeypatch.setattr(transcribe, "transcribe_file", _boom)
+
+    response = client_allow_500.post(
+        "/process", files=_wav_upload(), data={"mode": "note"}
+    )
+
+    assert response.status_code == 500
+    assert "Cannot allocate memory" not in response.text
 
 
 def test_process_sample_returns_404_when_sample_missing(client):

@@ -1,10 +1,12 @@
 """FastAPI application exposing the Second Brain protocol."""
 
+import logging
 import tempfile
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from av import FFmpegError
+from av import DecoderNotFoundError, DemuxerNotFoundError, InvalidDataError
+from av import EOFError as AVEOFError
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
@@ -13,7 +15,22 @@ from fastapi.responses import JSONResponse
 from app import ai, config, storage, transcribe
 from app.models import NoteOut, NoteResult, ProcessResponse, TaskOut, TaskResult
 
+logger = logging.getLogger(__name__)
+
 VALID_MODES = {"note", "task"}
+
+# PyAV raises these when the uploaded bytes are not usable audio content:
+# bad/truncated data, or a container/codec PyAV can't identify. This tuple
+# deliberately excludes the `av.FFmpegError` base and PyAV's `_extend_builtin`
+# OS-resource family (OSError, MemoryError, PermissionError, TimeoutError and
+# siblings) which also subclass FFmpegError but signal a genuine server-side
+# failure and must still surface as a 500, not a 400.
+_UNDECODABLE_AUDIO_ERRORS = (
+    InvalidDataError,
+    AVEOFError,
+    DecoderNotFoundError,
+    DemuxerNotFoundError,
+)
 
 
 @asynccontextmanager
@@ -48,9 +65,11 @@ def _require_mode(mode: str) -> str:
 def _run_pipeline(audio_path: Path, mode: str) -> ProcessResponse:
     try:
         transcript = transcribe.transcribe_file(audio_path)
-    except FFmpegError as exc:
+    except _UNDECODABLE_AUDIO_ERRORS as exc:
+        logger.warning("Could not decode audio upload: %s", exc)
         raise HTTPException(
-            status_code=400, detail=f"Could not decode audio upload: {exc}"
+            status_code=400,
+            detail="Could not decode audio upload: unsupported or corrupt audio format",
         ) from exc
     if not transcript:
         raise HTTPException(status_code=422, detail="No speech detected in audio")
