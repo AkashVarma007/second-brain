@@ -202,3 +202,8 @@ Cloud sync, phone app, wake-word / always-listening, on-device AI, multi-user, O
 2. **Sub-$20** is tight and sourcing-dependent (AliExpress yes, retail no).
 3. **Whisper `small.en`** accuracy on short/noisy clips — revisit model size if transcripts poor.
 4. **SPI bus sharing** (TFT + SD) under store-and-forward load — validate in Phase 4.
+5. **Brain hardening before the Phase 3 tunnel.** The Phase 1 brain is built for localhost/single
+   trusted user: `POST /process` has no upload-size cap, transcription has no timeout, and no
+   endpoint has authentication. Before exposing it via cloudflared in Phase 3, add an upload size
+   limit, a transcription timeout, and at least a shared-secret/token check — otherwise the public
+   URL is an unauthenticated, unbounded compute endpoint.
