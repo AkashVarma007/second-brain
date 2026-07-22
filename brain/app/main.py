@@ -116,9 +116,8 @@ async def process(audio: UploadFile = File(...), mode: str = Form(...)) -> Proce
 def process_sample(mode: str = "note") -> ProcessResponse:
     _require_mode(mode)
     if not config.SAMPLE_WAV.exists():
-        raise HTTPException(
-            status_code=404, detail=f"Sample audio not found at {config.SAMPLE_WAV}"
-        )
+        logger.warning("Sample audio not found at %s", config.SAMPLE_WAV)
+        raise HTTPException(status_code=404, detail="Sample audio not found")
     return _run_pipeline(config.SAMPLE_WAV, mode)
 
 

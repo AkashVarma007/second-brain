@@ -203,6 +203,9 @@ def test_process_sample_returns_404_when_sample_missing(client):
     response = client.post("/process-sample", params={"mode": "note"})
 
     assert response.status_code == 404
+    detail = response.json()["detail"]
+    assert str(config.SAMPLE_WAV) not in detail
+    assert "/" not in detail
 
 
 def test_process_sample_uses_the_configured_sample(client):
@@ -212,3 +215,34 @@ def test_process_sample_uses_the_configured_sample(client):
 
     assert response.status_code == 200
     assert response.json()["result"] == {"title": "Buy milk", "priority": "high"}
+
+
+def test_process_task_exercises_real_parse_task_and_save_task_seam(tmp_path, monkeypatch):
+    """Unlike `client`, this test does NOT mock ai.parse_task or ai.clean_note: only
+    the outermost external calls (transcribe.transcribe_file, ai._generate) are
+    mocked, so the REAL ai.parse_task and the REAL storage.save_task both run.
+    ai._generate is made to return an invalid priority ("urgent"); if
+    ai.parse_task ever stopped normalising unknown priorities to "medium",
+    storage.save_task's VALID_PRIORITIES guard would reject it and this test
+    would fail (a ValueError would propagate instead of a 200 response)."""
+    monkeypatch.setattr(config, "DB_PATH", tmp_path / "test.sqlite3")
+    monkeypatch.setattr(config, "SAMPLE_WAV", tmp_path / "sample.wav")
+    monkeypatch.setattr(transcribe, "transcribe_file", lambda path: "do the thing")
+    monkeypatch.setattr(
+        ai,
+        "_generate",
+        lambda prompt, *, as_json: '{"title": "Do the thing", "priority": "urgent"}',
+    )
+
+    with TestClient(main.app) as test_client:
+        response = test_client.post(
+            "/process", files=_wav_upload(), data={"mode": "task"}
+        )
+
+        assert response.status_code == 200
+        assert response.json()["result"] == {"title": "Do the thing", "priority": "medium"}
+
+        tasks = test_client.get("/tasks").json()
+        assert len(tasks) == 1
+        assert tasks[0]["title"] == "Do the thing"
+        assert tasks[0]["priority"] == "medium"
