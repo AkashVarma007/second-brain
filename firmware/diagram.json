@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "author": "AkashVarma007",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "board-esp32-s3-devkitc-1", "id": "esp", "top": 0, "left": 0, "attrs": {} },
+    { "type": "wokwi-ili9341", "id": "lcd", "top": -120, "left": 200,
+      "attrs": { "rotation": "0" } },
+    { "type": "wokwi-pushbutton", "id": "btnDown", "top": 100, "left": -180,
+      "attrs": { "color": "green", "label": "DOWN", "bounce": "0" } },
+    { "type": "wokwi-pushbutton", "id": "btnSelect", "top": 160, "left": -180,
+      "attrs": { "color": "blue", "label": "SELECT", "bounce": "0" } },
+    { "type": "wokwi-pushbutton", "id": "btnBack", "top": 220, "left": -180,
+      "attrs": { "color": "red", "label": "BACK", "bounce": "0" } }
+  ],
+  "connections": [
+    [ "lcd:VCC", "esp:3V3", "red", [] ],
+    [ "lcd:GND", "esp:GND", "black", [] ],
+    [ "lcd:CS", "esp:10", "orange", [] ],
+    [ "lcd:RST", "esp:6", "yellow", [] ],
+    [ "lcd:D/C", "esp:7", "green", [] ],
+    [ "lcd:MOSI", "esp:11", "blue", [] ],
+    [ "lcd:SCK", "esp:12", "purple", [] ],
+    [ "lcd:LED", "esp:14", "white", [] ],
+    [ "lcd:MISO", "esp:13", "gray", [] ],
+    [ "btnDown:1.l", "esp:4", "green", [] ],
+    [ "btnDown:2.l", "esp:GND", "black", [] ],
+    [ "btnSelect:1.l", "esp:5", "blue", [] ],
+    [ "btnSelect:2.l", "esp:GND", "black", [] ],
+    [ "btnBack:1.l", "esp:15", "red", [] ],
+    [ "btnBack:2.l", "esp:GND", "black", [] ]
+  ]
+}
