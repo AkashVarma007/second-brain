@@ -1,0 +1,103 @@
+# Wokwi scenario: drives the 3 buttons through the whole Second Brain UI and
+# screenshots every screen. This is the regression test for the *rendered* UI --
+# `pio test -e native` covers core/ logic, but only this proves the display,
+# SPI bus, LVGL flush and GPIO wiring actually work.
+#
+# Run it (needs a Wokwi CI token from https://wokwi.com/dashboard/ci):
+#   pio run -e esp32-s3
+#   WOKWI_CLI_TOKEN=<token> wokwi-cli --timeout 30000 --timeout-exit-code 0 \
+#     --scenario nav_scenario.yaml --serial-log-file .pio/wokwi-serial.log .
+#
+# Then assert the transition trace:
+#   grep 'screen=' .pio/wokwi-serial.log
+# Screenshots land in .pio/ (gitignored) as wokwi-shot-*.png.
+#
+# Presses are driven purely by `delay`, never by `wait-serial`. wokwi-cli's
+# wait-serial only matches output arriving *after* the step starts, and the
+# firmware prints its event line within ~5ms of the press -- a wait-serial
+# placed after the press/release always loses that race and hangs until the
+# run times out. Assert on the captured serial log instead.
+#
+# A press is held 150ms; Buttons::poll debounces at 25ms.
+
+name: Second Brain nav smoke
+version: 1
+author: Second Brain
+
+steps:
+  - wait-serial: "screen=Home cursor=0"
+  - delay: 500ms
+  - take-screenshot: { part-id: lcd, save-to: .pio/wokwi-shot-01-home.png }
+
+  # Down -> cursor moves to Tasks
+  - set-control: { part-id: btnDown, control: pressed, value: 1 }
+  - delay: 150ms
+  - set-control: { part-id: btnDown, control: pressed, value: 0 }
+  - delay: 400ms
+  - take-screenshot: { part-id: lcd, save-to: .pio/wokwi-shot-02-home-tasks.png }
+
+  # Down again -> wraps back to Notes
+  - set-control: { part-id: btnDown, control: pressed, value: 1 }
+  - delay: 150ms
+  - set-control: { part-id: btnDown, control: pressed, value: 0 }
+  - delay: 400ms
+
+  # Select -> NotesMenu
+  - set-control: { part-id: btnSelect, control: pressed, value: 1 }
+  - delay: 150ms
+  - set-control: { part-id: btnSelect, control: pressed, value: 0 }
+  - delay: 400ms
+  - take-screenshot: { part-id: lcd, save-to: .pio/wokwi-shot-03-notesmenu.png }
+
+  # Select -> NoteResult (the hardcoded sample transcript)
+  - set-control: { part-id: btnSelect, control: pressed, value: 1 }
+  - delay: 150ms
+  - set-control: { part-id: btnSelect, control: pressed, value: 0 }
+  - delay: 400ms
+  - take-screenshot: { part-id: lcd, save-to: .pio/wokwi-shot-04-noteresult.png }
+
+  # Select -> NoteConfirm
+  - set-control: { part-id: btnSelect, control: pressed, value: 1 }
+  - delay: 150ms
+  - set-control: { part-id: btnSelect, control: pressed, value: 0 }
+  - delay: 400ms
+  - take-screenshot: { part-id: lcd, save-to: .pio/wokwi-shot-05-noteconfirm.png }
+
+  # Select on Save -> back Home with the note stored (notes=1)
+  - set-control: { part-id: btnSelect, control: pressed, value: 1 }
+  - delay: 150ms
+  - set-control: { part-id: btnSelect, control: pressed, value: 0 }
+  - delay: 400ms
+  - take-screenshot: { part-id: lcd, save-to: .pio/wokwi-shot-06-home-saved.png }
+
+  # Down, then Select -> TasksMenu
+  - set-control: { part-id: btnDown, control: pressed, value: 1 }
+  - delay: 150ms
+  - set-control: { part-id: btnDown, control: pressed, value: 0 }
+  - delay: 400ms
+  - set-control: { part-id: btnSelect, control: pressed, value: 1 }
+  - delay: 150ms
+  - set-control: { part-id: btnSelect, control: pressed, value: 0 }
+  - delay: 400ms
+  - take-screenshot: { part-id: lcd, save-to: .pio/wokwi-shot-07-tasksmenu.png }
+
+  # Select -> TaskResult
+  - set-control: { part-id: btnSelect, control: pressed, value: 1 }
+  - delay: 150ms
+  - set-control: { part-id: btnSelect, control: pressed, value: 0 }
+  - delay: 400ms
+  - take-screenshot: { part-id: lcd, save-to: .pio/wokwi-shot-08-taskresult.png }
+
+  # Select -> TaskList (tasks=1)
+  - set-control: { part-id: btnSelect, control: pressed, value: 1 }
+  - delay: 150ms
+  - set-control: { part-id: btnSelect, control: pressed, value: 0 }
+  - delay: 400ms
+  - take-screenshot: { part-id: lcd, save-to: .pio/wokwi-shot-09-tasklist.png }
+
+  # Back -> Home
+  - set-control: { part-id: btnBack, control: pressed, value: 1 }
+  - delay: 150ms
+  - set-control: { part-id: btnBack, control: pressed, value: 0 }
+  - delay: 400ms
+  - take-screenshot: { part-id: lcd, save-to: .pio/wokwi-shot-10-home-final.png }
