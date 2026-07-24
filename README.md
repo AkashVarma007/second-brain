@@ -1,4 +1,38 @@
-# Second Brain
+<div align="center">
+
+<pre>
+███████╗███████╗ ██████╗ ██████╗ ███╗   ██╗██████╗ 
+██╔════╝██╔════╝██╔════╝██╔═══██╗████╗  ██║██╔══██╗
+███████╗█████╗  ██║     ██║   ██║██╔██╗ ██║██║  ██║
+╚════██║██╔══╝  ██║     ██║   ██║██║╚██╗██║██║  ██║
+███████║███████╗╚██████╗╚██████╔╝██║ ╚████║██████╔╝
+╚══════╝╚══════╝ ╚═════╝ ╚═════╝ ╚═╝  ╚═══╝╚═════╝ 
+██████╗ ██████╗  █████╗ ██╗███╗   ██╗
+██╔══██╗██╔══██╗██╔══██╗██║████╗  ██║
+██████╔╝██████╔╝███████║██║██╔██╗ ██║
+██╔══██╗██╔══██╗██╔══██║██║██║╚██╗██║
+██████╔╝██║  ██║██║  ██║██║██║ ╚████║
+╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝╚═╝  ╚═══╝
+</pre>
+
+**🧠 A voice-driven wearable second brain. Press a button, speak — get back a cleaned-up note or a prioritized task. Transcription and AI run entirely on your own laptop. No cloud, no subscriptions, no API keys.**
+
+<p align="center">
+  <a href="#license"><img alt="License: TBD" src="https://img.shields.io/badge/license-TBD-828b97?style=flat-square" /></a>
+  <a href="#what-it-is"><img alt="Runs 100% local" src="https://img.shields.io/badge/runs-100%25%20local-2bf07f?style=flat-square" /></a>
+  <a href="#status"><img alt="Phases 1–2 complete" src="https://img.shields.io/badge/phases%201%E2%80%932-complete-2bf07f?style=flat-square" /></a>
+  <br />
+  <a href="#tech-stack"><img alt="Python 3.12" src="https://img.shields.io/badge/Python-3.12-3776AB?style=flat-square&logo=python&logoColor=white" /></a>
+  <a href="#tech-stack"><img alt="FastAPI 0.115" src="https://img.shields.io/badge/FastAPI-0.115-009688?style=flat-square&logo=fastapi&logoColor=white" /></a>
+  <a href="#tech-stack"><img alt="Ollama llama3.2:3b" src="https://img.shields.io/badge/Ollama-llama3.2%3A3b-000000?style=flat-square&logo=ollama&logoColor=white" /></a>
+  <a href="#tech-stack"><img alt="React 19.2" src="https://img.shields.io/badge/React-19.2-61DAFB?style=flat-square&logo=react&logoColor=white" /></a>
+  <a href="#tech-stack"><img alt="TypeScript 6.0" src="https://img.shields.io/badge/TypeScript-6.0-3178C6?style=flat-square&logo=typescript&logoColor=white" /></a>
+  <a href="#tech-stack"><img alt="Vite 8.1" src="https://img.shields.io/badge/Vite-8.1-646CFF?style=flat-square&logo=vite&logoColor=white" /></a>
+  <a href="#architecture-protocol-first"><img alt="ESP32-S3" src="https://img.shields.io/badge/ESP32--S3-E7352C?style=flat-square&logo=espressif&logoColor=white" /></a>
+  <a href="#3-run-the-device-ui-simulated"><img alt="LVGL 8.4 in Wokwi" src="https://img.shields.io/badge/LVGL%208.4-Wokwi%20sim-e8590c?style=flat-square" /></a>
+</p>
+
+</div>
 
 > 🚧 **Work in progress — early development.** Personal project under active construction.
 > Phases 1 and 2 run today; later phases (device↔brain networking, real hardware) are still
