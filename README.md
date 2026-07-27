@@ -73,6 +73,15 @@ Hardware BOM and open questions: [`HARDWARE_BRIEF.md`](HARDWARE_BRIEF.md).
 Every screen above was captured from a real Wokwi run driven by the actual buttons, not
 mocked up. Reproduce it: [Run the device UI](#3-run-the-device-ui-simulated).
 
+### Explore the wiring in 3D
+
+Rotate the board and hover any wire to trace it pin-to-GPIO — an interactive 3D viewer
+generated from the same [`firmware/diagram.json`](firmware/diagram.json) the simulator runs on,
+so it always matches the real wiring.
+
+▶ **[Open the wiring inspector](https://akashvarma007.github.io/second-brain/wiring-3d.html)** ·
+full electrical reference in [`firmware/WIRING.md`](firmware/WIRING.md)
+
 ## Architecture (protocol-first)
 
 Three parts, joined only by a language-neutral **HTTP + JSON protocol** — so any part can be
