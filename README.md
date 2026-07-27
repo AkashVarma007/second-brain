@@ -133,8 +133,13 @@ flowchart LR
 
 Full pin map, net list, power and gotchas: [`firmware/WIRING.md`](firmware/WIRING.md).
 
-Want to rotate it in 3D and hover each wire? Open the interactive
-**[wiring inspector](https://akashvarma007.github.io/second-brain/wiring-3d.html)** — a single
+Want to rotate it in 3D and hover each wire? The clip below is a preview — **click it** to open
+the live inspector:
+
+[![Rotating 3D view of the wiring: ESP32-S3, ILI9341 display and three buttons joined by colour-coded wires](docs/images/wiring-3d.gif)](https://akashvarma007.github.io/second-brain/wiring-3d.html)
+
+**[Open the interactive wiring inspector →](https://akashvarma007.github.io/second-brain/wiring-3d.html)**
+— drag to rotate, scroll to zoom, hover any wire to trace it, click to lock it. It's a single
 self-contained file ([`docs/wiring-3d.html`](docs/wiring-3d.html)), so it also embeds anywhere
 via `<iframe>`.
 
