@@ -73,14 +73,70 @@ Hardware BOM and open questions: [`HARDWARE_BRIEF.md`](HARDWARE_BRIEF.md).
 Every screen above was captured from a real Wokwi run driven by the actual buttons, not
 mocked up. Reproduce it: [Run the device UI](#3-run-the-device-ui-simulated).
 
-### Explore the wiring in 3D
+### The wiring
 
-Rotate the board and hover any wire to trace it pin-to-GPIO — an interactive 3D viewer
-generated from the same [`firmware/diagram.json`](firmware/diagram.json) the simulator runs on,
-so it always matches the real wiring.
+Every connection in the Phase-2 setup, colour-coded to match the actual wires in
+[`firmware/diagram.json`](firmware/diagram.json):
 
-▶ **[Open the wiring inspector](https://akashvarma007.github.io/second-brain/wiring-3d.html)** ·
-full electrical reference in [`firmware/WIRING.md`](firmware/WIRING.md)
+```mermaid
+flowchart LR
+  DN(["DOWN"]):::bd
+  SE(["SELECT"]):::bs
+  BK(["BACK"]):::bb
+  ESP(["ESP32-S3"]):::mcu
+  LCD["ILI9341<br/>240×320 SPI"]:::part
+  USB[/"USB serial"/]:::io
+
+  LCD ---|"VCC · 3V3.1"| ESP
+  LCD ---|"GND · GND.1"| ESP
+  LCD ---|"CS · GPIO10"| ESP
+  LCD ---|"RST · GPIO6"| ESP
+  LCD ---|"D/C · GPIO7"| ESP
+  LCD ---|"MOSI · GPIO11"| ESP
+  LCD ---|"SCK · GPIO12"| ESP
+  LCD ---|"LED · GPIO14"| ESP
+  LCD ---|"MISO · GPIO13"| ESP
+  DN ---|"GPIO4"| ESP
+  DN ---|"GND.2"| ESP
+  SE ---|"GPIO5"| ESP
+  SE ---|"GND.3"| ESP
+  BK ---|"GPIO15"| ESP
+  BK ---|"GND.4"| ESP
+  ESP ---|"TX"| USB
+  ESP ---|"RX"| USB
+
+  classDef mcu fill:#1f6f54,stroke:#0d3f30,color:#ffffff;
+  classDef part fill:#12202b,stroke:#24333f,color:#d6e0ea;
+  classDef bd fill:#2a8843,stroke:#1c5c2e,color:#ffffff;
+  classDef bs fill:#3a63c0,stroke:#284a94,color:#ffffff;
+  classDef bb fill:#c1332f,stroke:#8f2420,color:#ffffff;
+  classDef io fill:#3a4650,stroke:#24333f,color:#e6ebf0;
+
+  linkStyle 0 stroke:#e5484d,stroke-width:2px;
+  linkStyle 1 stroke:#6b7280,stroke-width:2px;
+  linkStyle 2 stroke:#e8823a,stroke-width:2px;
+  linkStyle 3 stroke:#c99a1e,stroke-width:2px;
+  linkStyle 4 stroke:#2fa04a,stroke-width:2px;
+  linkStyle 5 stroke:#4a7bd6,stroke-width:2px;
+  linkStyle 6 stroke:#9a6bd6,stroke-width:2px;
+  linkStyle 7 stroke:#b9c0c8,stroke-width:2px;
+  linkStyle 8 stroke:#9aa2ab,stroke-width:2px;
+  linkStyle 9 stroke:#2fa04a,stroke-width:2px;
+  linkStyle 10 stroke:#6b7280,stroke-width:2px;
+  linkStyle 11 stroke:#4a7bd6,stroke-width:2px;
+  linkStyle 12 stroke:#6b7280,stroke-width:2px;
+  linkStyle 13 stroke:#e5484d,stroke-width:2px;
+  linkStyle 14 stroke:#6b7280,stroke-width:2px;
+  linkStyle 15 stroke:#2bb3ab,stroke-width:2px;
+  linkStyle 16 stroke:#2bb3ab,stroke-width:2px;
+```
+
+Full pin map, net list, power and gotchas: [`firmware/WIRING.md`](firmware/WIRING.md).
+
+Want to rotate it in 3D and hover each wire? Open the interactive
+**[wiring inspector](https://akashvarma007.github.io/second-brain/wiring-3d.html)** — a single
+self-contained file ([`docs/wiring-3d.html`](docs/wiring-3d.html)), so it also embeds anywhere
+via `<iframe>`.
 
 ## Architecture (protocol-first)
 
