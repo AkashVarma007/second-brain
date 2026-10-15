@@ -1,0 +1,200 @@
+{
+  "screen": "2.4",
+  "body_mm": [
+    100.26,
+    56.22,
+    15.0
+  ],
+  "glass_mm": [
+    60.26,
+    42.72,
+    2.5
+  ],
+  "active_mm": [
+    48.96,
+    36.72
+  ],
+  "active_rect": [
+    8.5,
+    11.0,
+    57.46,
+    47.72
+  ],
+  "stack_mm": 14.3,
+  "finishes": {
+    "graphite": {
+      "body": "#2B2731",
+      "ring": "#3A3540"
+    },
+    "chalk": {
+      "body": "#E8E3DA",
+      "ring": "#CFC8BD"
+    },
+    "amber": {
+      "body": "#E0913A",
+      "ring": "#2B2731"
+    }
+  },
+  "views": {
+    "front": {
+      "px_per_mm": 10.666666666666666,
+      "centre_px": [
+        800,
+        500
+      ]
+    },
+    "top": {
+      "px_per_mm": 10.666666666666666,
+      "centre_px": [
+        800,
+        500
+      ]
+    },
+    "back": {
+      "px_per_mm": 10.666666666666666,
+      "centre_px": [
+        800,
+        500
+      ]
+    },
+    "right": {
+      "px_per_mm": 17.77777777777778,
+      "centre_px": [
+        800,
+        500
+      ]
+    }
+  },
+  "parts": {
+    "Lens": {
+      "label": "Front lens",
+      "size": "dark acrylic, 1.2 thick",
+      "explode": 62.0
+    },
+    "Panel": {
+      "label": "2.4\" ILI9341 TFT, 320 x 240",
+      "size": "glass 60.26 x 42.72 x 2.5, active 48.96 x 36.72",
+      "explode": 18.0
+    },
+    "Foam": {
+      "label": "Foam pad",
+      "size": "0.3 thick",
+      "explode": 8.0
+    },
+    "Battery": {
+      "label": "503450 LiPo, about 1000 mAh",
+      "size": "50 x 34 x 5",
+      "explode": 0.0
+    },
+    "TALK": {
+      "label": "TALK key",
+      "size": "20 x 7.5 pill, hold to talk",
+      "explode": 78.0
+    },
+    "Ring": {
+      "label": "5-way ring",
+      "size": "18 across, up / down / left / right",
+      "explode": 78.0
+    },
+    "OK": {
+      "label": "OK key",
+      "size": "8 across, centre of the 5-way",
+      "explode": 78.0
+    },
+    "BACK": {
+      "label": "BACK key",
+      "size": "8.5 across",
+      "explode": 78.0
+    },
+    "SwTalk": {
+      "label": "Tact switch",
+      "size": "6 x 6 x 3.5",
+      "explode": -12.0
+    },
+    "Sw5Way": {
+      "label": "5-way switch",
+      "size": "10 x 10 x 3.5",
+      "explode": -12.0
+    },
+    "SwBack": {
+      "label": "Tact switch",
+      "size": "6 x 6 x 3.5",
+      "explode": -12.0
+    },
+    "LightPipe": {
+      "label": "Status light pipe",
+      "size": "1.8 across, clear",
+      "explode": 78.0
+    },
+    "KeySheet": {
+      "label": "Rubber key sheet",
+      "size": "0.8 thick",
+      "explode": 30.0
+    },
+    "USBC": {
+      "label": "USB-C receptacle",
+      "size": "8.94 x 7.35 x 3.26, mid-mount",
+      "explode": -12.0
+    },
+    "Board": {
+      "label": "Main board",
+      "size": "88.9 x 52.2 x 1.0, black",
+      "explode": -12.0
+    },
+    "Module": {
+      "label": "ESP32-S3-WROOM-1 N16R8",
+      "size": "18 x 25.5 x 3.1, antenna at the top edge",
+      "explode": -12.0
+    },
+    "Amp": {
+      "label": "MAX98357A amp",
+      "size": "3 x 3",
+      "explode": -12.0
+    },
+    "Charger": {
+      "label": "Charger + protection",
+      "size": "TP4056 + DW01 class",
+      "explode": -12.0
+    },
+    "Connector": {
+      "label": "FPC connector",
+      "size": "0.5 mm pitch",
+      "explode": -12.0
+    },
+    "FPC": {
+      "label": "Display FPC",
+      "size": "12 wide, folds back to the board",
+      "explode": 18.0
+    },
+    "Mic": {
+      "label": "INMP441 mic",
+      "size": "4.72 x 3.76, port in the top edge",
+      "explode": -12.0
+    },
+    "Speaker": {
+      "label": "Micro speaker",
+      "size": "15 x 11 x 3.5, fires out of the right side",
+      "explode": -12.0
+    },
+    "Screws": {
+      "label": "4 x M2 screws",
+      "size": "from the back into the front tub",
+      "explode": -46.0
+    },
+    "FrontShell": {
+      "label": "Front shell",
+      "size": "matte plastic, 1.5 side walls",
+      "explode": 44.0
+    },
+    "BackShell": {
+      "label": "Back cover",
+      "size": "2.6 deep, 4 screw bosses",
+      "explode": -28.0
+    },
+    "BackLabel": {
+      "label": "Back label",
+      "size": "second brain · SB-1 · 5V 1A",
+      "explode": -28.0
+    }
+  }
+}

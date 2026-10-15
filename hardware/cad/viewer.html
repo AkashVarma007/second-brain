@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Second Brain device 3D</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Interactive 3D model of the Second Brain pocket device: 2.8 and 2.4 inch screens, finishes, screen states and an exploded view.">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Silkscreen&display=swap">
+<style>
+/* Layout: one screen. Model stage fills the space, a control tray sits under it. */
+:root{
+  --bg:#EFE9E0; --tray:#FFFFFF; --ink:#1D1823; --muted:#5E5568; --accent:#9A4A08; --line:#E2D9CC; --chip:#F6F1EA; --on:#1D1823; --on-ink:#FFFFFF;
+  --ui:'Manrope',system-ui,-apple-system,'Segoe UI',sans-serif; --pixel:'Silkscreen',ui-monospace,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#17141B;--tray:#211D27;--ink:#F2ECE4;--muted:#B3A9BD;--accent:#F0A35E;--line:#332D3B;--chip:#2A2531;--on:#F2ECE4;--on-ink:#17141B;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#17141B;--tray:#211D27;--ink:#F2ECE4;--muted:#B3A9BD;--accent:#F0A35E;--line:#332D3B;--chip:#2A2531;--on:#F2ECE4;--on-ink:#17141B;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:14px/1.4 var(--ui)}
+#app{height:100%;display:flex;flex-direction:column}
+header{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;padding-block:12px 0;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1{margin:0;font-size:17px;font-weight:800;text-wrap:balance}
+#note{color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums}
+#stage{position:relative;flex:1;min-height:0;touch-action:none;overflow:hidden}
+#stage canvas{display:block;width:100%;height:100%;outline:none}
+#bar{display:flex;flex-direction:column;gap:8px;padding-block:10px calc(12px + env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));background:var(--tray);border-top:1px solid var(--line)}
+.row{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.row>b{width:64px;font:400 10px/1 var(--pixel);letter-spacing:.08em;color:var(--muted);text-transform:uppercase}
+button{font:600 13px/1 var(--ui);min-height:32px;padding:0 12px;border:1px solid var(--line);border-radius:999px;background:var(--chip);color:var(--ink);cursor:pointer}
+button[aria-pressed="true"]{background:var(--on);color:var(--on-ink);border-color:var(--on)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+input[type=range]{flex:1;min-width:0;max-width:220px;accent-color:var(--accent)}
+#info{position:absolute;left:max(16px,env(safe-area-inset-left,0px));top:12px;max-width:calc(100% - 32px);padding:8px 12px;border:1px solid var(--line);border-radius:12px;background:var(--tray);font-size:13px}
+.tag{position:absolute;transform:translateX(-50%);font-weight:700;font-size:13px;line-height:1.3;white-space:pre-line;text-align:center;pointer-events:none;font-variant-numeric:tabular-nums}
+@media (max-width:430px){.row{gap:4px}.row>b{width:50px;font-size:9px;letter-spacing:.04em}button{padding:0 7px;font-size:12px}}
+#msg{position:absolute;inset:0;display:grid;place-items:center;padding:16px;text-align:center;color:var(--muted)}
+</style>
+</head>
+<body>
+<div id="app">
+  <header><h1>Second Brain · device</h1><span id="note"></span></header>
+  <div id="stage"><div id="msg">Loading the 3D model…</div><div id="info" hidden></div><div id="tags"></div></div>
+  <div id="bar">
+    <div class="row"><b>Size</b><button id="b-size-28" data-k="size" data-v="28">2.8″</button><button id="b-size-24" data-k="size" data-v="24">2.4″</button><button id="b-compare" data-k="compare" data-v="1" data-toggle>Compare</button><button id="reset">Reset view</button></div>
+    <div class="row"><b>Finish</b><button id="b-graphite" data-k="finish" data-v="graphite">Graphite</button><button id="b-chalk" data-k="finish" data-v="chalk">Chalk</button><button id="b-amber" data-k="finish" data-v="amber">Amber</button></div>
+    <div class="row"><b>Screen</b><button id="b-home" data-k="screen" data-v="home">Home</button><button id="b-listening" data-k="screen" data-v="listening">Listening</button><button id="b-answer" data-k="screen" data-v="answer">Answer</button><button id="b-tasks" data-k="screen" data-v="tasks">Tasks</button><button id="b-alert" data-k="screen" data-v="alert">Alert</button></div>
+    <div class="row"><b>Explode</b><input id="explode" type="range" min="0" max="1" step="0.01" value="0" aria-label="Explode"><button id="b-dims" data-k="dims" data-v="1" data-toggle>Dimensions</button></div>
+  </div>
+</div>
+<pre id="result" hidden></pre>
+<script type="application/json" id="data">__DATA__</script>
+<script>
+// Runs before the module: collect errors for the self-test, and if the view never starts,
+// say what went wrong instead of leaving "Loading" up.
+window.__sbErrors = [];
+window.__sbFail = (text, soft) => {          // the first real error wins; soft (still-loading hint) never replaces one
+  if (window.__sbReady || window.__sbFailed) return;
+  if (!soft) window.__sbFailed = true;
+  const m = document.getElementById('msg'); if (m) m.textContent = text;
+};
+addEventListener('error', e => { __sbErrors.push(String(e.message || e)); __sbFail('The 3D view could not start: ' + __sbErrors[0]); });
+addEventListener('unhandledrejection', e => { __sbErrors.push(String((e.reason && e.reason.message) || e.reason)); __sbFail('The 3D view could not start: ' + __sbErrors[0]); });
+setTimeout(() => __sbFail('Still loading… this page needs internet for the 3D library (three.js from cdn.jsdelivr.net).', true), 20000);
+</script>
+<script type="module">
+// three.js from jsDelivr's pre-resolved ES modules: no import map, so hosts that load their own
+// module scripts first, and older phone browsers, still work. All add-ons import this same core URL.
+const CDN = 'https://cdn.jsdelivr.net/npm/three@0.169.0/';
+let THREE, OrbitControls, GLTFLoader, RoomEnvironment;
+try {
+  [THREE, { OrbitControls }, { GLTFLoader }, { RoomEnvironment }] = await Promise.all([
+    import(CDN + '+esm'), import(CDN + 'examples/jsm/controls/OrbitControls.js/+esm'),
+    import(CDN + 'examples/jsm/loaders/GLTFLoader.js/+esm'), import(CDN + 'examples/jsm/environments/RoomEnvironment.js/+esm')]);
+} catch (e) {
+  __sbFail('Could not load the 3D library (three.js from cdn.jsdelivr.net). This page needs internet. ' + e.message);
+  throw e;
+}
+
+const $ = id => document.getElementById(id);
+const DATA = JSON.parse($('data').textContent);
+const SIZES = ['28', '24'].filter(k => k in DATA.variants);    // left to right in Compare (object keys would sort 24 first)
+const DEF = { size: '28', compare: '0', finish: 'graphite', screen: 'home', explode: '0', dims: '0', pick: '' };
+const SELFTEST = new URLSearchParams(location.hash.slice(1)).get('selftest') === '1';
+const inch = k => k[0] + '.' + k.slice(1) + '″';
+const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#9A4A08';
+
+const stage = $('stage');
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.toneMapping = THREE.NeutralToneMapping;
+stage.prepend(renderer.domElement);
+const scene = new THREE.Scene();
+scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
+const sun = new THREE.DirectionalLight(0xffffff, 1.4);
+sun.position.set(-120, 200, 260);
+scene.add(sun);
+const camera = new THREE.PerspectiveCamera(30, 1, 1, 5000);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+
+// screens: glTF UVs expect flipY = false
+const screens = {};
+for (const [k, uri] of Object.entries(DATA.screens)) {
+  const t = await new THREE.TextureLoader().loadAsync(uri);
+  t.flipY = false; t.colorSpace = THREE.SRGBColorSpace; t.magFilter = THREE.NearestFilter;
+  screens[k] = t;
+}
+
+// models: centred at the origin; parts are the nodes with a label (glTF extras -> userData)
+const b64 = s => { const bin = atob(s), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return u.buffer; };
+const models = {};
+for (const k of SIZES) {
+  const gltf = await new GLTFLoader().parseAsync(b64(DATA.variants[k].glb), '');
+  const root = gltf.scene, group = new THREE.Group();
+  root.position.sub(new THREE.Box3().setFromObject(root).getCenter(new THREE.Vector3()));
+  group.add(root);
+  const parts = {};
+  root.traverse(o => { if (o.userData && o.userData.label) { parts[o.name] = o; o.userData.z0 = o.position.z; } });
+  const local = new THREE.Box3().setFromObject(group);
+  const helper = new THREE.Box3Helper(local, accent);
+  group.add(helper);
+  const tag = document.createElement('div');
+  tag.className = 'tag';
+  $('tags').append(tag);
+  models[k] = { group, parts, local, helper, tag, pick: null, dims: DATA.variants[k].dims };
+  scene.add(group);
+}
+const mats = (m, fn) => m.group.traverse(o => { if (o.isMesh) [].concat(o.material).forEach(fn); });
+let pickFrom = null;                                  // size of the model last tapped (Compare shows both)
+
+let S = read();
+function read() {
+  const q = new URLSearchParams(location.hash.slice(1)), s = { ...DEF };
+  for (const k in DEF) if (q.has(k)) s[k] = q.get(k);
+  if (!SIZES.includes(s.size)) s.size = DEF.size;
+  if (!(s.finish in DATA.finishes)) s.finish = DEF.finish;
+  if (!(s.screen in DATA.screens)) s.screen = DEF.screen;
+  s.compare = s.compare === '1' ? '1' : '0';
+  s.dims = s.dims === '1' ? '1' : '0';
+  const e = parseFloat(s.explode);
+  s.explode = String(Number.isFinite(e) ? Math.min(1, Math.max(0, e)) : 0);
+  if (s.pick && !Object.values(models).some(m => m.parts[s.pick])) s.pick = '';
+  return s;
+}
+function write() {
+  const q = new URLSearchParams();
+  for (const k in DEF) if (S[k] !== DEF[k]) q.set(k, S[k]);
+  try { history.replaceState(null, '', q.toString() ? '#' + q : location.pathname + location.search); } catch (e) { /* framed host: the link just won't carry the view */ }
+}
+function set(patch) { const prev = S; S = { ...S, ...patch }; write(); apply(prev); }
+addEventListener('hashchange', () => { const prev = S; S = read(); apply(prev); });
+
+function arrange() {
+  const show = S.compare === '1' ? SIZES : [S.size], gap = 24;
+  const widths = show.map(k => models[k].dims.body_mm[0]);
+  let left = -(widths.reduce((a, b) => a + b, 0) + gap * (show.length - 1)) / 2;
+  for (const k of SIZES) models[k].group.visible = show.includes(k);
+  show.forEach((k, i) => { models[k].group.position.x = left + widths[i] / 2; left += widths[i] + gap; });
+}
+function fit(front = false) {
+  const box = new THREE.Box3();
+  for (const m of Object.values(models)) if (m.group.visible) box.expandByObject(m.group);
+  const sphere = box.getBoundingSphere(new THREE.Sphere());
+  const v = THREE.MathUtils.degToRad(camera.fov) / 2, h = Math.atan(Math.tan(v) * camera.aspect);
+  const dist = sphere.radius / Math.sin(Math.min(v, h)) * 1.02;
+  const e = +S.explode;                               // exploded: swing to the side so the layers spread out
+  // Compare looks from the centre line: off to one side, the nearer model looks bigger than it is
+  const side = S.compare === '1' ? 0 : -0.35 - 0.9 * e;
+  const dir = front ? new THREE.Vector3(0, 0, 1) : new THREE.Vector3(side, 0.3 + 0.2 * e, 1).normalize();
+  controls.target.copy(sphere.center);
+  camera.position.copy(sphere.center).addScaledVector(dir, dist);
+  camera.near = dist / 50; camera.far = dist * 10;
+  camera.updateProjectionMatrix(); controls.update(); camera.updateMatrixWorld();
+}
+function apply(prev = {}) {
+  const layout = S.size !== prev.size || S.compare !== prev.compare;
+  if (layout) arrange();
+  if (S.finish !== prev.finish) {
+    const fin = DATA.finishes[S.finish];
+    for (const m of Object.values(models)) mats(m, mt => { if (fin[mt.name]) mt.color.set(fin[mt.name]); });
+  }
+  if (S.screen !== prev.screen) {
+    for (const m of Object.values(models)) mats(m, mt => {
+      if (mt.name === 'screen') { mt.map = mt.emissiveMap = screens[S.screen]; mt.emissive.set(0xffffff); mt.needsUpdate = true; }
+    });
+  }
+  const src = models[S.compare === '1' && pickFrom ? pickFrom : S.size];   // the model whose part the card describes
+  for (const m of Object.values(models)) {
+    for (const p of Object.values(m.parts)) p.position.z = p.userData.z0 + (p.userData.explode || 0) * +S.explode;
+    m.helper.visible = S.dims === '1';
+    if (m.pick) { scene.remove(m.pick); m.pick = null; }
+    if (S.pick && m === src && m.parts[S.pick]) { m.pick = new THREE.BoxHelper(m.parts[S.pick], accent); scene.add(m.pick); }
+  }
+  if (layout) fit();                                 // after explode, so the camera frames what is shown
+  $('explode').value = S.explode;
+  document.querySelectorAll('[data-k]').forEach(b => b.setAttribute('aria-pressed', String(S[b.dataset.k] === b.dataset.v)));
+  const p = S.pick && src.parts[S.pick];
+  $('info').hidden = !p;
+  if (p) $('info').textContent = p.userData.label + ' · ' + p.userData.size;
+  const d = models[S.size].dims.body_mm;
+  $('note').textContent = S.compare === '1' ? 'Both sizes at the same scale' : `${inch(S.size)} · ${d[0]} × ${d[1]} × ${d[2]} mm`;
+}
+function placeTags() {
+  const r = renderer.domElement.getBoundingClientRect(), want = S.compare === '1' || S.dims === '1';
+  for (const [k, m] of Object.entries(models)) {
+    m.tag.hidden = !(want && m.group.visible);
+    if (m.tag.hidden) continue;
+    const d = m.dims.body_mm;
+    m.tag.textContent = S.dims === '1' ? `${inch(k)}\n${d[0]} × ${d[1]} × ${d[2]} mm` : inch(k);
+    const p = new THREE.Vector3(m.group.position.x, m.local.min.y - 6, 0).project(camera);
+    m.tag.style.left = ((p.x + 1) / 2 * r.width) + 'px';
+    m.tag.style.top = ((1 - p.y) / 2 * r.height) + 'px';
+  }
+}
+
+// tap a part (a drag or a pinch is not a tap)
+const ray = new THREE.Raycaster();
+const downs = new Map();                              // pointerId -> where it went down
+let multi = false;                                    // two fingers were down at some point in this gesture
+const lift = e => {
+  const start = downs.get(e.pointerId), wasMulti = multi;
+  downs.delete(e.pointerId);
+  if (!downs.size) multi = false;
+  return wasMulti ? null : start;
+};
+renderer.domElement.addEventListener('pointerdown', e => { downs.set(e.pointerId, [e.clientX, e.clientY]); if (downs.size > 1) multi = true; });
+renderer.domElement.addEventListener('pointercancel', lift);
+renderer.domElement.addEventListener('pointerup', e => {
+  const down = lift(e);
+  if (!down || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 6) return;
+  const r = renderer.domElement.getBoundingClientRect();
+  ray.setFromCamera(new THREE.Vector2((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1), camera);
+  const hit = ray.intersectObjects(Object.values(models).filter(m => m.group.visible).map(m => m.group), true)
+    .find(h => h.object.isMesh);
+  let o = hit && hit.object;
+  pickFrom = o ? SIZES.find(k => { for (let x = o; x; x = x.parent) if (x === models[k].group) return true; return false; }) : null;
+  while (o && !(o.userData && o.userData.label)) o = o.parent;
+  set({ pick: o ? o.name : '' });
+});
+document.querySelectorAll('[data-k]').forEach(b => b.addEventListener('click', () => {
+  const k = b.dataset.k, v = b.dataset.v;
+  set({ [k]: b.hasAttribute('data-toggle') ? (S[k] === v ? '0' : v) : v, ...(k === 'size' ? { compare: '0' } : {}) });
+}));
+$('explode').addEventListener('input', e => set({ explode: e.target.value }));
+$('reset').addEventListener('click', () => fit());
+
+function resize() {
+  const w = stage.clientWidth, h = stage.clientHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / Math.max(h, 1);
+  camera.updateProjectionMatrix();
+}
+new ResizeObserver(resize).observe(stage);
+resize();
+apply();
+renderer.setAnimationLoop(() => {
+  controls.update();
+  for (const m of Object.values(models)) if (m.pick) m.pick.update();
+  placeTags();
+  renderer.render(scene, camera);
+});
+$('msg').remove();
+window.__sbReady = true;
+if (SELFTEST) selftest();
+
+function selftest() {
+  const start = { ...S };
+  const states = [{}, { size: '24' }, { compare: '1' }, { finish: 'chalk' }, { finish: 'amber' },
+    ...['listening', 'answer', 'tasks', 'alert'].map(screen => ({ screen })), { explode: '1' },
+    { explode: '1', pick: 'Battery' }, { compare: '1', dims: '1' }];
+  for (const st of states) { set({ ...DEF, ...st }); renderer.render(scene, camera); }
+  // the card shows the part of the size on screen
+  set({ ...DEF, explode: '1', pick: 'Panel' }); const card28 = $('info').textContent;
+  set({ ...DEF, size: '24', explode: '1', pick: 'Panel' }); const card24 = $('info').textContent;
+  // check 10: on-screen widths in compare mode, in the view people see
+  set({ ...DEF, compare: '1' });
+  const px = k => {
+    const b = new THREE.Box3().setFromObject(models[k].group);
+    const a = new THREE.Vector3(b.min.x, 0, b.max.z).project(camera), c = new THREE.Vector3(b.max.x, 0, b.max.z).project(camera);
+    return (c.x - a.x) * renderer.domElement.width / 2;
+  };
+  const w28 = px('28'), w24 = px('24'), W24 = models['24'].dims.body_mm[0];
+  const compare = { w28, w24, diff_mm: w28 / w24 * W24 - W24, expect_mm: models['28'].dims.body_mm[0] - W24 };
+  // tap vs drag at the centre of the 2.8 model, front view (orbit controls off: synthetic pointers can't be captured)
+  set({ ...DEF }); fit(true); controls.enabled = false;
+  const r = renderer.domElement.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+  const fire = (type, x, id = 1) => renderer.domElement.dispatchEvent(new PointerEvent(type, { clientX: x, clientY: cy, pointerId: id, bubbles: true }));
+  fire('pointerdown', cx); fire('pointerup', cx + 20); const drag = S.pick;
+  fire('pointerdown', cx, 1); fire('pointerdown', cx + 60, 2); fire('pointerup', cx + 60, 2); fire('pointerup', cx + 5, 1); const pinch = S.pick;
+  fire('pointerdown', cx); fire('pointerup', cx); const tap = S.pick;
+  controls.enabled = true;
+  $('result').textContent = JSON.stringify({ errors: __sbErrors, states: states.length, start, compare, tap: { drag, pinch, tap }, cards: { 28: card28, 24: card24 },
+    parts: Object.keys(models['28'].parts).sort() });
+  set({ ...start });
+}
+</script>
+</body>
+</html>
