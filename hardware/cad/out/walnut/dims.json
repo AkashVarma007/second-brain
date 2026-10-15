@@ -1,0 +1,212 @@
+{
+  "design": "walnut",
+  "title": "Walnut & brass",
+  "mood": "classy",
+  "blurb": "Anodised graphite body, walnut back panel, brass keys and a brass kickstand.",
+  "body_mm": [
+    103.3,
+    61.0,
+    15.0
+  ],
+  "panel_margin": 3.0,
+  "active_mm": [
+    64.8,
+    48.6
+  ],
+  "active_rect": [
+    6.0,
+    6.2,
+    70.8,
+    54.8
+  ],
+  "stack_mm": 14.3,
+  "stand": {
+    "open_deg": 39.12,
+    "tilt_deg": 18.0,
+    "kind": "plate",
+    "hinge": [
+      51.65,
+      17.0,
+      45.14
+    ]
+  },
+  "views": {
+    "front": {
+      "px_per_mm": 10.666666666666666,
+      "centre_px": [
+        800,
+        500
+      ]
+    }
+  },
+  "parts": {
+    "Lens": {
+      "label": "Cover glass",
+      "size": "clear acrylic over the screen",
+      "explode": 62.0,
+      "fw": null
+    },
+    "Panel": {
+      "label": "3.2\" ILI9341 TFT, 320 x 240",
+      "size": "active 64.8 x 48.6 mm, SPI",
+      "explode": 18.0,
+      "fw": "display"
+    },
+    "Foam": {
+      "label": "Foam pad",
+      "size": "0.3 thick",
+      "explode": 8.0,
+      "fw": null
+    },
+    "Battery": {
+      "label": "503450 LiPo, about 1000 mAh",
+      "size": "50 x 34 x 5",
+      "explode": 0.0,
+      "fw": "power"
+    },
+    "TALK": {
+      "label": "TALK key",
+      "size": "hold to talk",
+      "explode": 80.0,
+      "fw": "input"
+    },
+    "Ring": {
+      "label": "5-way ring",
+      "size": "up / down / left / right",
+      "explode": 80.0,
+      "fw": "input"
+    },
+    "OK": {
+      "label": "OK key",
+      "size": "centre of the 5-way",
+      "explode": 80.0,
+      "fw": "input"
+    },
+    "BACK": {
+      "label": "BACK key",
+      "size": "go back",
+      "explode": 80.0,
+      "fw": "input"
+    },
+    "SwTalk": {
+      "label": "Tact switch",
+      "size": "6 x 6 x 3.5",
+      "explode": -12.0,
+      "fw": "input"
+    },
+    "Sw5Way": {
+      "label": "5-way switch",
+      "size": "10 x 10 x 3.5",
+      "explode": -12.0,
+      "fw": "input"
+    },
+    "SwBack": {
+      "label": "Tact switch",
+      "size": "6 x 6 x 3.5",
+      "explode": -12.0,
+      "fw": "input"
+    },
+    "LightPipe": {
+      "label": "Status light",
+      "size": "light pipe over an LED",
+      "explode": 80.0,
+      "fw": "ui"
+    },
+    "KeySheet": {
+      "label": "Rubber key sheet",
+      "size": "0.8 thick",
+      "explode": 30.0,
+      "fw": null
+    },
+    "USBC": {
+      "label": "USB-C",
+      "size": "charging and data",
+      "explode": -12.0,
+      "fw": "power"
+    },
+    "Board": {
+      "label": "Main board",
+      "size": "1.0 thick, black",
+      "explode": -12.0,
+      "fw": null
+    },
+    "Module": {
+      "label": "ESP32-S3 module",
+      "size": "16 MB flash, 8 MB PSRAM, Wi-Fi",
+      "explode": -12.0,
+      "fw": "runtime"
+    },
+    "Amp": {
+      "label": "MAX98357A amp",
+      "size": "I2S audio out",
+      "explode": -12.0,
+      "fw": "audio out"
+    },
+    "Charger": {
+      "label": "Charger + protection",
+      "size": "USB-C to LiPo",
+      "explode": -12.0,
+      "fw": "power"
+    },
+    "Connector": {
+      "label": "Screen connector",
+      "size": "FPC, 0.5 mm pitch",
+      "explode": -12.0,
+      "fw": "display"
+    },
+    "FPC": {
+      "label": "Screen ribbon",
+      "size": "folds behind the panel",
+      "explode": 18.0,
+      "fw": "display"
+    },
+    "Mic": {
+      "label": "INMP441 mic",
+      "size": "I2S, port in the top edge",
+      "explode": -12.0,
+      "fw": "audio in"
+    },
+    "Speaker": {
+      "label": "Speaker",
+      "size": "15 x 11 mm, fires out the right side",
+      "explode": -12.0,
+      "fw": "audio out"
+    },
+    "Screws": {
+      "label": "4 x M2 screws",
+      "size": "from the back into the front tub",
+      "explode": -46.0,
+      "fw": null
+    },
+    "Caps": {
+      "label": "4 screw caps",
+      "size": "press-fit, body colour, flush with the back",
+      "explode": -53.0,
+      "fw": null
+    },
+    "FrontShell": {
+      "label": "Front shell",
+      "size": "Walnut & brass",
+      "explode": 44.0,
+      "fw": null
+    },
+    "BackShell": {
+      "label": "Back cover",
+      "size": "Walnut & brass, 4 screw bosses",
+      "explode": -28.0,
+      "fw": null
+    },
+    "BackPanel": {
+      "label": "Back panel",
+      "size": "walnut veneer",
+      "explode": -32.0,
+      "fw": null
+    },
+    "Stand": {
+      "label": "Kickstand",
+      "size": "opens to stand the device at 18 deg",
+      "explode": -60.0,
+      "fw": null
+    }
+  }
+}

@@ -53,7 +53,7 @@ https://claude.ai/artifact/N4j4FnrEww5LbYWzwsV5RV
 | Conversation | Press TALK, speak; answer on screen **and spoken**; short window to reply again | 2026-10-15 |
 | Speaker | **Part of the base hardware** (needed to talk back) | 2026-10-15 |
 | Recording | Tap to start / tap to stop by default; hold-to-talk for quick captures | proposed — confirm |
-| Screen | Still open: 128×64 mono vs colour TFT (see [§13](#13-open-questions)) | open |
+| Screen | **3.2" 320×240 colour TFT** (ILI9341), tight layout: the opening hugs the picture, no front logo band. Body about 103 × 61 × 15 mm (depends on the case). 2.8" / 2.4" compared in CAD v1 and retired | 2026-10-15 |
 
 ## 2. Product vision
 
@@ -568,7 +568,8 @@ Each phase gets its own spec → plan → build cycle. Phases 1–4 need no new 
 
 ## 13. Open questions
 
-- [ ] **Screen:** 128×64 mono (pocket, Flipper-like) or colour TFT (richer widgets, exact mock colours)? The widget set works on both, but charts and density favour colour.
+- [x] **Screen:** 3.2" 320×240 colour TFT, tight layout — decided 2026-10-15.
+- [ ] **Case design:** pick one of the six modelled cases (walnut, instrument, arcade, clear, egg, sticker bomb) or mix two.
 - [ ] **Recording default:** tap-to-start/stop with hold-to-talk for quick notes — confirm.
 - [ ] **Phone platform:** Android first, then iOS?
 - [ ] **Which persona bundles ship first?** Suggested: Developer, Analyst, Executive, Student.
@@ -577,6 +578,18 @@ Each phase gets its own spec → plan → build cycle. Phases 1–4 need no new 
 - [x] **Speaker:** in the base hardware — decided 2026-10-15 (the assistant talks back).
 - [ ] **Microphone for meetings:** one INMP441 is fine for dictation but weak across a meeting room; test it, and consider a second mic or the laptop mic for room meetings.
 - [ ] **Name:** keep "Second Brain" and "NOG" for the product?
+
+**Physical refinements — after the app and flows work** (noted 2026-10-15):
+
+- Thinner body (~14 mm): battery capacity follows volume, so a flat, wide cell behind the screen keeps
+  capacity. A ~1000 mAh LiPo is typically 5 mm thick (503450); the 10 mm 103450 cell is ~1800–2000 mAh.
+- Softer side edges and back (pebble profile), not only rounded corners.
+- Recessed screen behind thin cover glass (~1 mm lip protects it face-down and in pockets).
+- Optional pocket clip, lanyard loop and fold-out desk stand.
+- **Device CAD v2 (2026-10-15):** 3.2" screen, tight layout, 15 mm stack; six case designs with
+  kickstands, from about 103 × 60 to 108 × 73 mm. **Open: pick the case.** Spec
+  `docs/superpowers/specs/2026-10-15-device-cad-v2-design.md`, model `hardware/cad/`. (v1 compared
+  2.8" at 109 × 64 and 2.4" at 100 × 56; the first quote of 125 × 77 came from a 2D view drawn at ~4".)
 
 ## 14. Research notes and sources
 

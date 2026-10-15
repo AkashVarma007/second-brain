@@ -5,10 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Second Brain device 3D</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<meta name="description" content="Interactive 3D model of the Second Brain pocket device: 2.8 and 2.4 inch screens, finishes, screen states and an exploded view.">
+<meta name="description" content="Interactive 3D model of the Second Brain pocket device in six case designs, with a labelled exploded view, a guided tour of the parts and the firmware behind them, and the kickstand.">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Silkscreen&display=swap">
 <style>
-/* Layout: one screen. Model stage fills the space, a control tray sits under it. */
+/* Layout: one screen. Model stage fills the space (labels, markers and the tour card float over it),
+   a control tray sits under it. */
 :root{
   --bg:#EFE9E0; --tray:#FFFFFF; --ink:#1D1823; --muted:#5E5568; --accent:#9A4A08; --line:#E2D9CC; --chip:#F6F1EA; --on:#1D1823; --on-ink:#FFFFFF;
   --ui:'Manrope',system-ui,-apple-system,'Segoe UI',sans-serif; --pixel:'Silkscreen',ui-monospace,monospace;
@@ -17,7 +18,7 @@
 :root[data-theme="dark"]{--bg:#17141B;--tray:#211D27;--ink:#F2ECE4;--muted:#B3A9BD;--accent:#F0A35E;--line:#332D3B;--chip:#2A2531;--on:#F2ECE4;--on-ink:#17141B;color-scheme:dark}
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:14px/1.4 var(--ui)}
-#app{height:100%;display:flex;flex-direction:column}
+#app{height:100%;display:flex;flex-direction:column;container-type:inline-size}
 header{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;padding-block:12px 0;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 h1{margin:0;font-size:17px;font-weight:800;text-wrap:balance}
 #note{color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums}
@@ -29,22 +30,47 @@ h1{margin:0;font-size:17px;font-weight:800;text-wrap:balance}
 button{font:600 13px/1 var(--ui);min-height:32px;padding:0 12px;border:1px solid var(--line);border-radius:999px;background:var(--chip);color:var(--ink);cursor:pointer}
 button[aria-pressed="true"]{background:var(--on);color:var(--on-ink);border-color:var(--on)}
 button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-input[type=range]{flex:1;min-width:0;max-width:220px;accent-color:var(--accent)}
-#info{position:absolute;left:max(16px,env(safe-area-inset-left,0px));top:12px;max-width:calc(100% - 32px);padding:8px 12px;border:1px solid var(--line);border-radius:12px;background:var(--tray);font-size:13px}
+input[type=range]{flex:1;min-width:0;max-width:200px;accent-color:var(--accent)}
+#info{position:absolute;left:max(16px,env(safe-area-inset-left,0px));bottom:12px;max-width:calc(100% - 32px);padding:8px 12px;border:1px solid var(--line);border-radius:12px;background:var(--tray);font-size:13px}
 .tag{position:absolute;transform:translateX(-50%);font-weight:700;font-size:13px;line-height:1.3;white-space:pre-line;text-align:center;pointer-events:none;font-variant-numeric:tabular-nums}
-@media (max-width:430px){.row{gap:4px}.row>b{width:50px;font-size:9px;letter-spacing:.04em}button{padding:0 7px;font-size:12px}}
+#labels,#markers{position:absolute;inset:0;pointer-events:none}
+#leaders{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+#leaders line{stroke:var(--accent);stroke-width:1.2}
+#leaders circle{fill:var(--accent)}
+.lbl{position:absolute;max-width:190px;padding:5px 8px;border:1px solid var(--line);border-radius:9px;background:var(--tray);font-size:12px;line-height:1.25;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.lbl b{display:block;font-size:12px;font-weight:800}
+.lbl span{display:block;color:var(--muted);font-size:11px}
+.fw{display:inline-block;margin-top:3px;padding:1px 6px;border-radius:999px;border:1px solid var(--line);background:var(--chip);font:400 9px/1.5 var(--pixel);letter-spacing:.05em;text-transform:uppercase;color:var(--accent)}
+.mk{position:absolute;width:22px;height:22px;margin:-11px 0 0 -11px;border-radius:50%;border:2px solid var(--tray);background:var(--accent);color:var(--on-ink);font:800 12px/18px var(--ui);text-align:center;pointer-events:auto;cursor:pointer;padding:0;min-height:0}
+#tour{position:absolute;top:10px;left:max(12px,env(safe-area-inset-left,0px));right:max(12px,env(safe-area-inset-right,0px));max-width:440px;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:var(--tray);box-shadow:0 2px 10px rgba(0,0,0,.12)}
+#tour small{font:400 10px/1 var(--pixel);letter-spacing:.08em;color:var(--muted);text-transform:uppercase}
+#tour h2{margin:4px 0;font-size:15px;font-weight:800}
+#tour p{margin:0 0 6px;font-size:13px;line-height:1.45}
+.tnav{display:flex;gap:6px;margin-top:8px}
+.lbl .no{display:inline-block;min-width:18px;height:18px;margin:0 4px 0 0;padding:0 4px;border:0;border-radius:9px;background:var(--accent);color:var(--on-ink);font:800 11px/18px var(--ui);text-align:center;vertical-align:1px;pointer-events:auto;cursor:pointer;min-height:0}
+#labels.tour .no{display:none}
+@container (max-width:600px){.lbl{max-width:112px;padding:4px 6px}.lbl span:not(.fw){display:none}.fw{font-size:8px;letter-spacing:0;padding:1px 4px}#tour{padding:10px 12px}#tour p{font-size:12px}}
+@container (max-width:430px){.row{gap:4px}.row>b{width:50px;font-size:9px;letter-spacing:.04em}button{padding:0 7px;font-size:12px}}
 #msg{position:absolute;inset:0;display:grid;place-items:center;padding:16px;text-align:center;color:var(--muted)}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
 </style>
 </head>
 <body>
 <div id="app">
   <header><h1>Second Brain · device</h1><span id="note"></span></header>
-  <div id="stage"><div id="msg">Loading the 3D model…</div><div id="info" hidden></div><div id="tags"></div></div>
+  <div id="stage">
+    <div id="msg">Loading the 3D model…</div>
+    <div id="labels"><svg id="leaders"></svg></div>
+    <div id="markers"></div>
+    <div id="tags"></div>
+    <div id="info" hidden></div>
+    <div id="tour" hidden><small id="tstep"></small><h2 id="ttitle"></h2><p id="tbody"></p><span class="fw" id="tfw"></span>
+      <div class="tnav"><button id="tprev">Back</button><button id="tnext">Next</button><button id="tclose">Close</button></div></div>
+  </div>
   <div id="bar">
-    <div class="row"><b>Size</b><button id="b-size-28" data-k="size" data-v="28">2.8″</button><button id="b-size-24" data-k="size" data-v="24">2.4″</button><button id="b-compare" data-k="compare" data-v="1" data-toggle>Compare</button><button id="reset">Reset view</button></div>
-    <div class="row"><b>Finish</b><button id="b-graphite" data-k="finish" data-v="graphite">Graphite</button><button id="b-chalk" data-k="finish" data-v="chalk">Chalk</button><button id="b-amber" data-k="finish" data-v="amber">Amber</button></div>
+    <div class="row"><b>Design</b><button id="b-walnut" data-k="design" data-v="walnut">Walnut</button><button id="b-instrument" data-k="design" data-v="instrument">Instrument</button><button id="b-arcade" data-k="design" data-v="arcade">Arcade</button><button id="b-clear" data-k="design" data-v="clear">Clear</button><button id="b-egg" data-k="design" data-v="egg">Egg</button><button id="b-bomb" data-k="design" data-v="bomb">Stickers</button></div>
     <div class="row"><b>Screen</b><button id="b-home" data-k="screen" data-v="home">Home</button><button id="b-listening" data-k="screen" data-v="listening">Listening</button><button id="b-answer" data-k="screen" data-v="answer">Answer</button><button id="b-tasks" data-k="screen" data-v="tasks">Tasks</button><button id="b-alert" data-k="screen" data-v="alert">Alert</button></div>
-    <div class="row"><b>Explode</b><input id="explode" type="range" min="0" max="1" step="0.01" value="0" aria-label="Explode"><button id="b-dims" data-k="dims" data-v="1" data-toggle>Dimensions</button></div>
+    <div class="row"><b>View</b><input id="explode" type="range" min="0" max="1" step="0.01" value="0" aria-label="Explode"><button id="b-labels" data-k="labels" data-v="1" data-toggle>Labels</button><button id="b-stand" data-k="stand" data-v="1" data-toggle>Stand</button><button id="b-dims" data-k="dims" data-v="1" data-toggle>Size</button><button id="tourbtn">Tour</button></div>
   </div>
 </div>
 <pre id="result" hidden></pre>
@@ -78,11 +104,39 @@ try {
 
 const $ = id => document.getElementById(id);
 const DATA = JSON.parse($('data').textContent);
-const SIZES = ['28', '24'].filter(k => k in DATA.variants);    // left to right in Compare (object keys would sort 24 first)
-const DEF = { size: '28', compare: '0', finish: 'graphite', screen: 'home', explode: '0', dims: '0', pick: '' };
+const DESIGNS = DATA.order;
+const DEF = { design: DESIGNS[0], screen: 'home', explode: '0', labels: '0', stand: '0', dims: '0', pick: '', step: '0' };
 const SELFTEST = new URLSearchParams(location.hash.slice(1)).get('selftest') === '1';
-const inch = k => k[0] + '.' + k.slice(1) + '″';
 const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#9A4A08';
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const FW = { display: 'display', input: 'input', runtime: 'runtime', 'audio in': 'audio in', 'audio out': 'audio out', power: 'power', ui: 'ui' };
+const LABEL_PARTS = ['Panel', 'TALK', 'Ring', 'Module', 'Battery', 'Mic', 'Speaker', 'USBC', 'Board', 'KeySheet', 'Stand', 'Screws'];
+const TOUR = [
+  { t: 'The device', parts: [], explode: 0, dir: [-0.35, 0.3, 1],
+    body: d => `${d.title}: ${d.blurb} ${d.body_mm[0]} × ${d.body_mm[1]} × ${d.body_mm[2]} mm with a 3.2″ screen.`,
+    fw: 'NOG-OS on the ESP32-S3 (planned)' },
+  { t: 'Screen', parts: ['Panel', 'Lens', 'FPC', 'Connector'], explode: 0.35, dir: [-0.2, 0.2, 1],
+    body: () => '3.2″ ILI9341, 320 × 240 pixels, on SPI. The opening hugs the picture; the panel’s border and ribbon hide under the case.',
+    fw: 'display driver + UI renderer' },
+  { t: 'Keys', parts: ['TALK', 'Ring', 'OK', 'BACK', 'SwTalk', 'Sw5Way', 'SwBack', 'KeySheet'], explode: 0.55, dir: [0.55, 0.25, 1],
+    body: () => 'Hold TALK to speak. The 5-way ring and OK move and choose; BACK goes back. Each key presses a tact switch on the main board through a rubber sheet.',
+    fw: 'input: debounce, hold-to-talk' },
+  { t: 'Brain chip', parts: ['Module', 'Board'], explode: 0.8, dir: [-0.6, 0.35, -0.8],
+    body: () => 'ESP32-S3 module, 16 MB flash and 8 MB PSRAM, on the back of a thin main board. It runs the screens, the apps and Wi-Fi.',
+    fw: 'app runtime + screen router + apps' },
+  { t: 'Voice', parts: ['Mic', 'Speaker', 'Amp'], explode: 0.8, dir: [0.85, 0.3, 0.5],
+    body: () => 'An INMP441 mic listens through a pinhole in the top edge. A MAX98357A amp drives the speaker behind the side grille.',
+    fw: 'audio in + audio out (I2S)' },
+  { t: 'Power', parts: ['Battery', 'USBC', 'Charger'], explode: 0.8, dir: [0.6, 0.3, -0.7],
+    body: () => 'A 503450 cell, about 1000 mAh, sits behind the screen. USB-C charges it through a charger with protection.',
+    fw: 'power: battery gauge, sleep' },
+  { t: 'Link to the laptop brain', parts: ['Module'], explode: 0.5, dir: [-0.4, 0.3, 1],
+    body: () => 'Over Wi-Fi to the brain on your laptop: /process for what you say, /notes and /tasks for what it files.',
+    fw: 'network client + offline queue' },
+  { t: 'Case & stand', parts: ['FrontShell', 'BackShell', 'Stand', 'Screws', 'Caps', 'BackPanel', 'FacePlate', 'Stickers', 'Engraving', 'Cheeks'], explode: 0.35, stand: true, dir: [0.7, 0.25, -0.9],
+    body: d => `${d.title}. Two-part shell held by four M2 screws, hidden under press-fit caps. The kickstand opens to ${d.stand.open_deg}° and the device leans back ${d.stand.tilt_deg}°.`,
+    fw: null },
+];
 
 const stage = $('stage');
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
@@ -106,40 +160,79 @@ for (const [k, uri] of Object.entries(DATA.screens)) {
   screens[k] = t;
 }
 
-// models: centred at the origin; parts are the nodes with a label (glTF extras -> userData)
+// models: one per design, centred at the origin; parts are the nodes with a label (glTF extras -> userData)
 const b64 = s => { const bin = atob(s), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return u.buffer; };
+// GLTFLoader decodes embedded images with createImageBitmap when it exists; that decode sometimes
+// never settles in headless Chrome's virtual time (the checks), while <img> decoding always does and
+// works everywhere. So hide it while parsing.
+const cib = globalThis.createImageBitmap;
+globalThis.createImageBitmap = undefined;
 const models = {};
-for (const k of SIZES) {
-  const gltf = await new GLTFLoader().parseAsync(b64(DATA.variants[k].glb), '');
+for (const k of DESIGNS) {
+  const gltf = await new GLTFLoader().parseAsync(b64(DATA.designs[k].glb), '');
   const root = gltf.scene, group = new THREE.Group();
   root.position.sub(new THREE.Box3().setFromObject(root).getCenter(new THREE.Vector3()));
   group.add(root);
+  group.updateMatrixWorld(true);
   const parts = {};
-  root.traverse(o => { if (o.userData && o.userData.label) { parts[o.name] = o; o.userData.z0 = o.position.z; } });
+  root.traverse(o => {
+    if (o.userData && o.userData.label) {
+      parts[o.name] = o;
+      o.userData.z0 = o.position.z;
+      o.userData.anchor = o.worldToLocal(new THREE.Box3().setFromObject(o).getCenter(new THREE.Vector3()));
+    }
+  });
   const local = new THREE.Box3().setFromObject(group);
   const helper = new THREE.Box3Helper(local, accent);
   group.add(helper);
-  const tag = document.createElement('div');
-  tag.className = 'tag';
-  $('tags').append(tag);
-  models[k] = { group, parts, local, helper, tag, pick: null, dims: DATA.variants[k].dims };
+  group.visible = false;
+  models[k] = { group, parts, local, helper, dims: DATA.designs[k].dims };
   scene.add(group);
 }
+globalThis.createImageBitmap = cib;
 const mats = (m, fn) => m.group.traverse(o => { if (o.isMesh) [].concat(o.material).forEach(fn); });
-let pickFrom = null;                                  // size of the model last tapped (Compare shows both)
+const M = () => models[S.design];
+
+// labels: one DOM label per labelled part name (texts follow the design on screen)
+const labelEls = {};
+for (const n of LABEL_PARTS) {
+  const el = document.createElement('div');
+  el.className = 'lbl';
+  $('labels').append(el);
+  labelEls[n] = el;
+}
+const helpers = [];                                   // highlight boxes (tour step parts or the tapped part)
+const labelColumn = () => (stage.clientWidth <= 600 ? 112 : 190);   // = .lbl max-width
+const anchorOf = k => TOUR[k - 1].parts.find(n => M().parts[n]);     // a step's marker sits on its first part
+const stepsAt = n => TOUR.map((t, i) => i + 1).filter(k => k > 1 && anchorOf(k) === n);
+const markerEls = TOUR.slice(1).map((st, i) => {
+  const b = document.createElement('button');
+  b.className = 'mk'; b.textContent = String(i + 2); b.setAttribute('aria-label', 'Tour step ' + (i + 2) + ': ' + st.t);
+  b.addEventListener('click', e => { e.stopPropagation(); goStep(i + 2); });
+  $('markers').append(b);
+  return b;
+});
+const sizeTag = document.createElement('div');
+sizeTag.className = 'tag';
+$('tags').append(sizeTag);
 
 let S = read();
 function read() {
   const q = new URLSearchParams(location.hash.slice(1)), s = { ...DEF };
   for (const k in DEF) if (q.has(k)) s[k] = q.get(k);
-  if (!SIZES.includes(s.size)) s.size = DEF.size;
-  if (!(s.finish in DATA.finishes)) s.finish = DEF.finish;
-  if (!(s.screen in DATA.screens)) s.screen = DEF.screen;
-  s.compare = s.compare === '1' ? '1' : '0';
-  s.dims = s.dims === '1' ? '1' : '0';
+  if (!DESIGNS.includes(s.design)) s.design = DEF.design;
+  if (!Object.hasOwn(DATA.screens, s.screen)) s.screen = DEF.screen;
+  for (const k of ['labels', 'stand', 'dims']) s[k] = s[k] === '1' ? '1' : '0';
   const e = parseFloat(s.explode);
   s.explode = String(Number.isFinite(e) ? Math.min(1, Math.max(0, e)) : 0);
-  if (s.pick && !Object.values(models).some(m => m.parts[s.pick])) s.pick = '';
+  const st = parseInt(s.step, 10);
+  s.step = String(st >= 1 && st <= TOUR.length ? st : 0);
+  if (+s.step) {
+    const t = TOUR[+s.step - 1];
+    if (!q.has('explode')) s.explode = String(t.explode);
+    if (!q.has('stand')) s.stand = t.stand ? '1' : '0';
+  }
+  if (s.pick && !Object.hasOwn(models[s.design].parts, s.pick)) s.pick = '';
   return s;
 }
 function write() {
@@ -150,73 +243,184 @@ function write() {
 function set(patch) { const prev = S; S = { ...S, ...patch }; write(); apply(prev); }
 addEventListener('hashchange', () => { const prev = S; S = read(); apply(prev); });
 
-function arrange() {
-  const show = S.compare === '1' ? SIZES : [S.size], gap = 24;
-  const widths = show.map(k => models[k].dims.body_mm[0]);
-  let left = -(widths.reduce((a, b) => a + b, 0) + gap * (show.length - 1)) / 2;
-  for (const k of SIZES) models[k].group.visible = show.includes(k);
-  show.forEach((k, i) => { models[k].group.position.x = left + widths[i] / 2; left += widths[i] + gap; });
+// camera: fit the model (exploded parts included) from a direction; animated unless reduced motion
+let anim = null;
+const narrow = () => stage.clientWidth <= 600;          // phones: one label column, on the right
+function freeRect() {
+  // the part of the stage the model may use: beside the label column(s), below the tour card, above the info card
+  const W = stage.clientWidth, H = Math.max(stage.clientHeight, 1), col = labelColumn() + 16;
+  const labels = S.labels === '1' || +S.step;
+  const x0 = labels && !narrow() ? col : 0, x1 = labels ? W - col : W;
+  const y0 = +S.step ? $('tour').offsetTop + $('tour').offsetHeight + 8 : 0, y1 = H - ($('info').hidden ? 0 : $('info').offsetHeight + 20);
+  return { x0, x1: Math.max(x1, x0 + W * 0.3), y0, y1: Math.max(y1, y0 + H * 0.3), W, H };
 }
-function fit(front = false) {
-  const box = new THREE.Box3();
-  for (const m of Object.values(models)) if (m.group.visible) box.expandByObject(m.group);
+function aimView() {
+  // centre the projection on the free rect (camera view offset), so the model sits in it
+  const f = freeRect();
+  camera.setViewOffset(f.W, f.H, f.W / 2 - (f.x0 + f.x1) / 2, f.H / 2 - (f.y0 + f.y1) / 2, f.W, f.H);
+}
+function fitTarget(dirv) {
+  const box = new THREE.Box3().expandByObject(M().group);
   const sphere = box.getBoundingSphere(new THREE.Sphere());
-  const v = THREE.MathUtils.degToRad(camera.fov) / 2, h = Math.atan(Math.tan(v) * camera.aspect);
+  const f = freeRect();
+  const t = Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2);
+  const v = Math.atan(t * (f.y1 - f.y0) / f.H), h = Math.atan(t * (f.x1 - f.x0) / f.H);
   const dist = sphere.radius / Math.sin(Math.min(v, h)) * 1.02;
-  const e = +S.explode;                               // exploded: swing to the side so the layers spread out
-  // Compare looks from the centre line: off to one side, the nearer model looks bigger than it is
-  const side = S.compare === '1' ? 0 : -0.35 - 0.9 * e;
-  const dir = front ? new THREE.Vector3(0, 0, 1) : new THREE.Vector3(side, 0.3 + 0.2 * e, 1).normalize();
-  controls.target.copy(sphere.center);
-  camera.position.copy(sphere.center).addScaledVector(dir, dist);
-  camera.near = dist / 50; camera.far = dist * 10;
-  camera.updateProjectionMatrix(); controls.update(); camera.updateMatrixWorld();
+  const dir = new THREE.Vector3(...dirv).normalize();
+  return { pos: sphere.center.clone().addScaledVector(dir, dist), target: sphere.center.clone(), dist };
 }
+function fly(dirv, instant) {
+  aimView();
+  const to = fitTarget(dirv);
+  camera.near = to.dist / 50; camera.far = to.dist * 10; camera.updateProjectionMatrix();
+  if (instant || reduced) { camera.position.copy(to.pos); controls.target.copy(to.target); controls.update(); camera.updateMatrixWorld(); anim = null; return; }
+  anim = { t0: performance.now(), p0: camera.position.clone(), q0: controls.target.clone(), to };
+}
+function stepAnim(now) {
+  if (!anim) return;
+  const t = Math.min(1, (now - anim.t0) / 700), k = t * t * (3 - 2 * t);
+  camera.position.lerpVectors(anim.p0, anim.to.pos, k);
+  controls.target.lerpVectors(anim.q0, anim.to.target, k);
+  if (t >= 1) anim = null;
+}
+function finishAnim() { if (anim) { camera.position.copy(anim.to.pos); controls.target.copy(anim.to.target); anim = null; } controls.update(); camera.updateMatrixWorld(); }
+const defaultDir = () => (+S.step ? TOUR[+S.step - 1].dir : [-0.35 - 0.9 * +S.explode, 0.3 + 0.2 * +S.explode, 1]);
+
 function apply(prev = {}) {
-  const layout = S.size !== prev.size || S.compare !== prev.compare;
-  if (layout) arrange();
-  if (S.finish !== prev.finish) {
-    const fin = DATA.finishes[S.finish];
-    for (const m of Object.values(models)) mats(m, mt => { if (fin[mt.name]) mt.color.set(fin[mt.name]); });
-  }
-  if (S.screen !== prev.screen) {
-    for (const m of Object.values(models)) mats(m, mt => {
+  const m = M();
+  if (S.design !== prev.design) for (const [k, mm] of Object.entries(models)) mm.group.visible = k === S.design;
+  if (S.screen !== prev.screen || S.design !== prev.design) {
+    for (const mm of Object.values(models)) mats(mm, mt => {
       if (mt.name === 'screen') { mt.map = mt.emissiveMap = screens[S.screen]; mt.emissive.set(0xffffff); mt.needsUpdate = true; }
     });
   }
-  const src = models[S.compare === '1' && pickFrom ? pickFrom : S.size];   // the model whose part the card describes
-  for (const m of Object.values(models)) {
-    for (const p of Object.values(m.parts)) p.position.z = p.userData.z0 + (p.userData.explode || 0) * +S.explode;
-    m.helper.visible = S.dims === '1';
-    if (m.pick) { scene.remove(m.pick); m.pick = null; }
-    if (S.pick && m === src && m.parts[S.pick]) { m.pick = new THREE.BoxHelper(m.parts[S.pick], accent); scene.add(m.pick); }
+  const step = +S.step ? TOUR[+S.step - 1] : null;
+  for (const p of Object.values(m.parts)) p.position.z = p.userData.z0 + (p.userData.explode || 0) * +S.explode;
+  const stand = m.parts.Stand;
+  if (stand) stand.rotation.x = S.stand === '1' ? THREE.MathUtils.degToRad(m.dims.stand.open_deg) : 0;
+  m.helper.visible = S.dims === '1';
+  for (const h of helpers) { scene.remove(h); h.geometry.dispose(); h.material.dispose(); }
+  helpers.length = 0;
+  const lit = step ? step.parts : (S.pick ? [S.pick] : []);
+  for (const n of lit) if (m.parts[n]) { const h = new THREE.BoxHelper(m.parts[n], accent); scene.add(h); helpers.push(h); }
+  if (S.design !== prev.design || S.step !== prev.step || S.labels !== prev.labels) fly(defaultDir(), S.design !== prev.design && !step);
+  $('labels').classList.toggle('tour', !!step);
+  // tour card
+  $('tour').hidden = !step;
+  if (step) {
+    $('tstep').textContent = `Step ${S.step} of ${TOUR.length}`;
+    $('ttitle').textContent = step.t;
+    $('tbody').textContent = step.body(m.dims);
+    $('tfw').textContent = step.fw ? 'Planned firmware · ' + step.fw : 'No firmware: mechanical';
+    $('tprev').disabled = +S.step === 1;
+    $('tnext').textContent = +S.step === TOUR.length ? 'Done' : 'Next';
   }
-  if (layout) fit();                                 // after explode, so the camera frames what is shown
+  // label texts for this design
+  for (const [n, el] of Object.entries(labelEls)) {
+    const p = m.parts[n];
+    if (!p) continue;
+    el.innerHTML = '';
+    const b = document.createElement('b'); b.textContent = p.userData.label;
+    const s = document.createElement('span'); s.textContent = p.userData.size;
+    for (const k of stepsAt(n)) {
+      const no = document.createElement('button');
+      no.className = 'no'; no.textContent = String(k); no.setAttribute('aria-label', 'Tour step ' + k + ': ' + TOUR[k - 1].t);
+      no.addEventListener('click', e => { e.stopPropagation(); goStep(k); });
+      b.prepend(no);
+    }
+    el.append(b, s);
+    if (p.userData.fw) { const f = document.createElement('span'); f.className = 'fw'; f.textContent = 'planned · ' + (FW[p.userData.fw] || p.userData.fw); el.append(f); }
+  }
   $('explode').value = S.explode;
   document.querySelectorAll('[data-k]').forEach(b => b.setAttribute('aria-pressed', String(S[b.dataset.k] === b.dataset.v)));
-  const p = S.pick && src.parts[S.pick];
+  $('tourbtn').setAttribute('aria-pressed', String(!!step));
+  const p = !step && S.pick && m.parts[S.pick];
   $('info').hidden = !p;
-  if (p) $('info').textContent = p.userData.label + ' · ' + p.userData.size;
-  const d = models[S.size].dims.body_mm;
-  $('note').textContent = S.compare === '1' ? 'Both sizes at the same scale' : `${inch(S.size)} · ${d[0]} × ${d[1]} × ${d[2]} mm`;
+  if (p) $('info').textContent = [p.userData.label, p.userData.size, p.userData.fw ? 'planned firmware: ' + p.userData.fw : ''].filter(Boolean).join(' · ');
+  const d = m.dims.body_mm;
+  $('note').textContent = `${m.dims.title} · ${d[0]} × ${d[1]} × ${d[2]} mm`;
 }
-function placeTags() {
-  const r = renderer.domElement.getBoundingClientRect(), want = S.compare === '1' || S.dims === '1';
-  for (const [k, m] of Object.entries(models)) {
-    m.tag.hidden = !(want && m.group.visible);
-    if (m.tag.hidden) continue;
-    const d = m.dims.body_mm;
-    m.tag.textContent = S.dims === '1' ? `${inch(k)}\n${d[0]} × ${d[1]} × ${d[2]} mm` : inch(k);
-    const p = new THREE.Vector3(m.group.position.x, m.local.min.y - 6, 0).project(camera);
-    m.tag.style.left = ((p.x + 1) / 2 * r.width) + 'px';
-    m.tag.style.top = ((1 - p.y) / 2 * r.height) + 'px';
+
+// labels: two columns beside the model, each sorted by its part's height, never overlapping
+function placeLabels() {
+  const m = M(), step = +S.step ? TOUR[+S.step - 1] : null;
+  const show = S.labels === '1' || !!step;
+  const W = stage.clientWidth, H = stage.clientHeight;
+  const svg = $('leaders');
+  svg.innerHTML = '';
+  const tourEl = $('tour');
+  const top0 = step ? tourEl.offsetTop + tourEl.offsetHeight + 8 : 8, bottom0 = H - ($('info').hidden ? 8 : $('info').offsetHeight + 20);
+  const items = [];
+  for (const n of LABEL_PARTS) {
+    const el = labelEls[n], p = m.parts[n];
+    const want = show && p && (!step || step.parts.includes(n));
+    el.hidden = !want;
+    if (!want) continue;
+    const a = p.localToWorld(p.userData.anchor.clone()).project(camera);
+    if (a.z > 1) { el.hidden = true; continue; }
+    items.push({ n, el, ax: (a.x + 1) / 2 * W, ay: (1 - a.y) / 2 * H, w: el.offsetWidth, h: el.offsetHeight });
+  }
+  for (const side of [0, 1]) {
+    const f = freeRect(), mid = (f.x0 + f.x1) / 2;
+    const col = items.filter(it => (narrow() || it.ax >= mid) === !!side).sort((a, b) => a.ay - b.ay);
+    while (col.reduce((s, it) => s + it.h + 6, 0) > bottom0 - top0 && col.length) {   // too many for the column: drop the last-listed
+      const drop = col.reduce((a, b) => (LABEL_PARTS.indexOf(a.n) > LABEL_PARTS.indexOf(b.n) ? a : b));
+      drop.el.hidden = true;
+      col.splice(col.indexOf(drop), 1);
+    }
+    let y = top0;
+    for (const it of col) { it.y = Math.max(it.ay - it.h / 2, y); y = it.y + it.h + 6; }
+    let over = y - 6 - bottom0;                                   // push back up if the column runs off the bottom
+    for (let i = col.length - 1; i >= 0 && over > 0; i--) {
+      const it = col[i], room = i ? it.y - (col[i - 1].y + col[i - 1].h + 6) : it.y - top0;
+      const mv = Math.min(over, Math.max(room, 0));
+      for (let j = i; j < col.length; j++) col[j].y -= mv;
+      over -= mv;
+    }
+    for (const it of col) {
+      it.x = side ? W - 8 - it.w : 8;
+      it.el.style.transform = `translate(${it.x}px, ${it.y}px)`;
+      const lx = side ? it.x : it.x + it.w, ly = it.y + it.h / 2;
+      svg.insertAdjacentHTML('beforeend', `<line x1="${lx}" y1="${ly}" x2="${it.ax}" y2="${it.ay}"/><circle cx="${it.ax}" cy="${it.ay}" r="2.5"/>`);
+    }
+  }
+  // markers: tour steps 2..8 whose part has no visible label (labelled parts carry a badge instead),
+  // when labels are on and no tour is running; kept inside the stage and never on top of each other
+  const placed = [];
+  TOUR.slice(1).forEach((st, i) => {
+    const el = markerEls[i], n = anchorOf(i + 2), p = n && m.parts[n];
+    el.hidden = !(S.labels === '1' && !step && p && !(labelEls[n] && !labelEls[n].hidden));
+    if (el.hidden) return;
+    const a = p.localToWorld(p.userData.anchor.clone()).project(camera);
+    let x = Math.min(Math.max((a.x + 1) / 2 * W, 14), W - 14), y = Math.min(Math.max((1 - a.y) / 2 * H, 14), H - 14);
+    while (placed.some(([px, py]) => Math.hypot(px - x, py - y) < 24)) x = x + 26 > W - 14 ? x - 52 : x + 26;
+    placed.push([x, y]);
+    el.style.left = x + 'px';
+    el.style.top = y + 'px';
+  });
+  // size tag under the model
+  sizeTag.hidden = S.dims !== '1';
+  if (!sizeTag.hidden) {
+    const d = m.dims.body_mm, a = new THREE.Vector3(0, m.local.min.y - 6, 0).project(camera);
+    sizeTag.textContent = `${d[0]} × ${d[1]} × ${d[2]} mm`;
+    sizeTag.style.left = ((a.x + 1) / 2 * W) + 'px';
+    sizeTag.style.top = ((1 - a.y) / 2 * H) + 'px';
   }
 }
 
+function goStep(n) {
+  const st = TOUR[n - 1];
+  set({ step: String(n), explode: String(st.explode), stand: st.stand ? '1' : '0', pick: '' });
+}
+$('tourbtn').addEventListener('click', () => (+S.step ? set({ step: '0' }) : goStep(1)));
+$('tprev').addEventListener('click', () => goStep(Math.max(1, +S.step - 1)));
+$('tnext').addEventListener('click', () => (+S.step < TOUR.length ? goStep(+S.step + 1) : set({ step: '0', explode: '0', stand: '0' })));
+$('tclose').addEventListener('click', () => set({ step: '0' }));
+
 // tap a part (a drag or a pinch is not a tap)
 const ray = new THREE.Raycaster();
-const downs = new Map();                              // pointerId -> where it went down
-let multi = false;                                    // two fingers were down at some point in this gesture
+const downs = new Map();
+let multi = false;
 const lift = e => {
   const start = downs.get(e.pointerId), wasMulti = multi;
   downs.delete(e.pointerId);
@@ -230,67 +434,121 @@ renderer.domElement.addEventListener('pointerup', e => {
   if (!down || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 6) return;
   const r = renderer.domElement.getBoundingClientRect();
   ray.setFromCamera(new THREE.Vector2((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1), camera);
-  const hit = ray.intersectObjects(Object.values(models).filter(m => m.group.visible).map(m => m.group), true)
-    .find(h => h.object.isMesh);
+  const hit = ray.intersectObject(M().group, true).find(h => h.object.isMesh);
   let o = hit && hit.object;
-  pickFrom = o ? SIZES.find(k => { for (let x = o; x; x = x.parent) if (x === models[k].group) return true; return false; }) : null;
   while (o && !(o.userData && o.userData.label)) o = o.parent;
-  set({ pick: o ? o.name : '' });
+  set({ pick: o ? o.name : '', step: '0' });
 });
 document.querySelectorAll('[data-k]').forEach(b => b.addEventListener('click', () => {
   const k = b.dataset.k, v = b.dataset.v;
-  set({ [k]: b.hasAttribute('data-toggle') ? (S[k] === v ? '0' : v) : v, ...(k === 'size' ? { compare: '0' } : {}) });
+  set({ [k]: b.hasAttribute('data-toggle') ? (S[k] === v ? '0' : v) : v, ...(k === 'design' ? { pick: '' } : {}) });
 }));
 $('explode').addEventListener('input', e => set({ explode: e.target.value }));
-$('reset').addEventListener('click', () => fit());
 
 function resize() {
   const w = stage.clientWidth, h = stage.clientHeight;
   renderer.setSize(w, h, false);
   camera.aspect = w / Math.max(h, 1);
+  aimView();
   camera.updateProjectionMatrix();
 }
 new ResizeObserver(resize).observe(stage);
 resize();
 apply();
-renderer.setAnimationLoop(() => {
+fly(defaultDir(), true);
+const frame = now => {
+  stepAnim(now || performance.now());
   controls.update();
-  for (const m of Object.values(models)) if (m.pick) m.pick.update();
-  placeTags();
+  for (const h of helpers) h.update();
+  placeLabels();
   renderer.render(scene, camera);
-});
+};
+renderer.setAnimationLoop(frame);
 $('msg').remove();
 window.__sbReady = true;
 if (SELFTEST) selftest();
 
+function measureLabels() {
+  const sr = stage.getBoundingClientRect();
+  const rs = [...document.querySelectorAll('.lbl')].filter(el => !el.hidden).map(el => el.getBoundingClientRect());
+  let overlaps = 0, outside = 0;
+  rs.forEach((a, i) => {
+    if (a.left < sr.left - 0.5 || a.right > sr.right + 0.5 || a.top < sr.top - 0.5 || a.bottom > sr.bottom + 0.5) outside++;
+    rs.slice(i + 1).forEach(b => { if (a.left < b.right - 0.5 && b.left < a.right - 0.5 && a.top < b.bottom - 0.5 && b.top < a.bottom - 0.5) overlaps++; });
+  });
+  return { n: rs.length, overlaps, outside };
+}
+
+function measureMarkers() {
+  const sr = stage.getBoundingClientRect();
+  const cs = [...document.querySelectorAll('.mk')].filter(el => !el.hidden).map(el => el.getBoundingClientRect()).map(r => [r.left + r.width / 2, r.top + r.height / 2, r]);
+  let outside = 0, stacked = 0;
+  cs.forEach(([x, y, r], i) => {
+    if (r.left < sr.left - 0.5 || r.right > sr.right + 0.5 || r.top < sr.top - 0.5 || r.bottom > sr.bottom + 0.5) outside++;
+    cs.slice(i + 1).forEach(([x2, y2]) => { if (Math.hypot(x - x2, y - y2) < 20) stacked++; });
+  });
+  return { n: cs.length, outside, stacked };
+}
+
+function measureBand() {
+  // the model (projected bounding box) sits between the left and right label columns
+  const W = stage.clientWidth, H = stage.clientHeight, m = M(), b = new THREE.Box3().setFromObject(m.group);
+  let lo = Infinity, hi = -Infinity;
+  for (const x of [b.min.x, b.max.x]) for (const y of [b.min.y, b.max.y]) for (const z of [b.min.z, b.max.z]) {
+    const p = new THREE.Vector3(x, y, z).project(camera), px = (p.x + 1) / 2 * W;
+    lo = Math.min(lo, px); hi = Math.max(hi, px);
+  }
+  const sr = stage.getBoundingClientRect(), ls = [...document.querySelectorAll('.lbl')].filter(el => !el.hidden).map(el => el.getBoundingClientRect());
+  const left = Math.max(0, ...ls.filter(r => r.left - sr.left < W / 2).map(r => r.right - sr.left));
+  const right = Math.min(W, ...ls.filter(r => r.left - sr.left >= W / 2).map(r => r.left - sr.left));
+  return { model: [Math.round(lo), Math.round(hi)], columns: [Math.round(left), Math.round(right)], inside: lo >= left - 12 && hi <= right + 12 };
+}
+
 function selftest() {
-  const start = { ...S };
-  const states = [{}, { size: '24' }, { compare: '1' }, { finish: 'chalk' }, { finish: 'amber' },
-    ...['listening', 'answer', 'tasks', 'alert'].map(screen => ({ screen })), { explode: '1' },
-    { explode: '1', pick: 'Battery' }, { compare: '1', dims: '1' }];
-  for (const st of states) { set({ ...DEF, ...st }); renderer.render(scene, camera); }
-  // the card shows the part of the size on screen
-  set({ ...DEF, explode: '1', pick: 'Panel' }); const card28 = $('info').textContent;
-  set({ ...DEF, size: '24', explode: '1', pick: 'Panel' }); const card24 = $('info').textContent;
-  // check 10: on-screen widths in compare mode, in the view people see
-  set({ ...DEF, compare: '1' });
-  const px = k => {
-    const b = new THREE.Box3().setFromObject(models[k].group);
-    const a = new THREE.Vector3(b.min.x, 0, b.max.z).project(camera), c = new THREE.Vector3(b.max.x, 0, b.max.z).project(camera);
-    return (c.x - a.x) * renderer.domElement.width / 2;
-  };
-  const w28 = px('28'), w24 = px('24'), W24 = models['24'].dims.body_mm[0];
-  const compare = { w28, w24, diff_mm: w28 / w24 * W24 - W24, expect_mm: models['28'].dims.body_mm[0] - W24 };
-  // tap vs drag at the centre of the 2.8 model, front view (orbit controls off: synthetic pointers can't be captured)
-  set({ ...DEF }); fit(true); controls.enabled = false;
+  const start = { ...S }, designs = {}, titles = {}, cards = {};
+  for (const d of DESIGNS) {
+    set({ ...DEF, design: d }); finishAnim(); frame();
+    designs[d] = Object.keys(models[d].parts).sort();
+    titles[d] = models[d].dims.title;
+    set({ ...DEF, design: d, pick: 'FrontShell' }); cards[d] = $('info').textContent;
+  }
+  let tour = 0;
+  for (let i = 1; i <= TOUR.length; i++) { goStep(i); finishAnim(); frame(); if (!$('tour').hidden && $('ttitle').textContent === TOUR[i - 1].t) tour++; }
+  const labels = {};
+  const markers = {}, band = {}, chips = { phone: 0, hidden: 0 };
+  const app = $('app');                               // measure at real desktop and phone sizes, not the test window's
+  set({ ...DEF, explode: '1', labels: '1' });
+  app.style.width = '1280px'; app.style.height = '800px';
+  resize(); fly(defaultDir(), true); frame(); frame();
+  labels.desktop = measureLabels(); markers.desktop = measureMarkers(); band.desktop = measureBand();
+  app.style.width = '390px'; app.style.height = '844px';
+  resize(); fly(defaultDir(), true); frame(); frame();
+  labels.phone = measureLabels(); markers.phone = measureMarkers(); band.phone = measureBand();
+  for (const f of document.querySelectorAll('.lbl:not([hidden]) .fw')) getComputedStyle(f).display === 'none' ? chips.hidden++ : chips.phone++;
+  const fwtext = (document.querySelector('.lbl:not([hidden]) .fw') || {}).textContent || '';
+  app.style.width = app.style.height = ''; resize();
+  set({ ...DEF, stand: '1' });
+  const stand = { applied: THREE.MathUtils.radToDeg(M().parts.Stand.rotation.x), open_deg: M().dims.stand.open_deg };
+  set({ ...DEF, pick: 'Battery' }); const pickfw = $('info').textContent;
+  // highlight boxes after switching design in the middle of the tour
+  goStep(3); set({ design: 'arcade' });
+  const helperCheck = { after_switch: helpers.length, expected: TOUR[2].parts.filter(n => models.arcade.parts[n]).length };
+  // deep links to a tour step
+  const saved = location.hash;
+  history.replaceState(null, '', '#step=3'); const d3 = read();
+  history.replaceState(null, '', '#step=8'); const d8 = read();
+  history.replaceState(null, '', saved || '#');
+  const deeplink = { explode: d3.explode, stand: d3.stand }, deeplink8 = { stand: d8.stand };
+  // tap vs drag vs pinch at the centre of the default model, front view (orbit controls off: synthetic pointers can't be captured)
+  set({ ...DEF }); fly([0, 0, 1], true); controls.enabled = false;
   const r = renderer.domElement.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
   const fire = (type, x, id = 1) => renderer.domElement.dispatchEvent(new PointerEvent(type, { clientX: x, clientY: cy, pointerId: id, bubbles: true }));
   fire('pointerdown', cx); fire('pointerup', cx + 20); const drag = S.pick;
   fire('pointerdown', cx, 1); fire('pointerdown', cx + 60, 2); fire('pointerup', cx + 60, 2); fire('pointerup', cx + 5, 1); const pinch = S.pick;
   fire('pointerdown', cx); fire('pointerup', cx); const tap = S.pick;
   controls.enabled = true;
-  $('result').textContent = JSON.stringify({ errors: __sbErrors, states: states.length, start, compare, tap: { drag, pinch, tap }, cards: { 28: card28, 24: card24 },
-    parts: Object.keys(models['28'].parts).sort() });
+  $('result').textContent = JSON.stringify({ errors: __sbErrors, designs, titles, cards, tour, labels, stand, tap: { drag, pinch, tap }, start,
+    helpers: helperCheck, markers, chips, deeplink, deeplink8, band, fwtext, pickfw });
   set({ ...start });
 }
 </script>

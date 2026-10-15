@@ -1,7 +1,8 @@
-"""Build-time checks on the real meshes (spec checks 1-7). Runs inside Blender.
+"""Build-time checks on the real meshes (spec checks 1-8). Runs inside Blender.
 Each check returns messages naming the part and the numbers; an empty list is a pass."""
 import itertools
 import json
+import math
 import os
 
 import bpy
@@ -74,22 +75,22 @@ def run(L, objs):
     """Checks 1-6. objs = {part name: object}."""
     err = []
     W, H, D = L["W"], L["H"], L["D"]
-    tw, th = LY.TARGETS[L["screen"]]
+    Hm = max([H] + [z + L["design"]["ears"]["r"] for _, z in L["ears"]])       # ears stand above the body
     shell = world_verts(objs["FrontShell"]) + world_verts(objs["BackShell"])
     lo, hi = bounds(shell)
     mw, md, mh = (hi[i] - lo[i] for i in range(3))
-    if max(abs(mw - W), abs(mh - H), abs(md - D)) > 0.05:
-        err.append("1 body mesh %.2f x %.2f x %.2f, layout %.2f x %.2f x %.2f" % (mw, mh, md, W, H, D))
-    if abs(W - tw) > 1.0 or abs(H - th) > 1.0 or D != 15.0:
-        err.append("1 body %.2f x %.2f x %.1f is not within 1 mm of %g x %g x 15" % (W, H, D, tw, th))
-    for tag, ys, e in (("front", lo[1], LY.EDGE_FRONT), ("back", hi[1], LY.EDGE_BACK)):
+    if max(abs(mw - W), abs(mh - Hm), abs(md - D)) > 0.05:
+        err.append("1 body mesh %.2f x %.2f x %.2f, layout %.2f x %.2f x %.2f" % (mw, mh, md, W, Hm, D))
+    if not (95 <= W <= 118 and 55 <= H <= 80) or D != 15.0:
+        err.append("1 body %.2f x %.2f x %.1f is not pocket-sized" % (W, H, D))
+    for tag, ys, e in (("front", lo[1], L["ef"]), ("back", hi[1], L["eb"])):
         xs = [v.x for v in shell if abs(v.y - ys) < 1e-3]
         if abs(max(xs) - min(xs) - (W - 2 * e)) > 0.15:
             err.append("1 %s edge round: flat face %.2f wide, want %.2f" % (tag, max(xs) - min(xs), W - 2 * e))
     if L["stack_mm"] > D:
         err.append("2 stack-up %.2f mm > %.1f" % (L["stack_mm"], D))
     for name in LY.INTERNAL:
-        out = [v for v in world_verts(objs[name]) if not LY.inside_cavity(L, v)]
+        out = [v for v in world_verts(objs[name]) if not LY.inside_shell(L, v)]
         if out:
             err.append("3 %s: %d vertices outside the cavity, e.g. (%.2f, %.2f, %.2f)" % ((name, len(out)) + tuple(out[0])))
     out = [v for v in world_verts(objs["Screws"]) if not LY.inside_body(L, v)]
@@ -108,14 +109,26 @@ def run(L, objs):
     return err
 
 
+def stand(L, objs, alpha):
+    """Check 8: the closed kickstand stays above the device's bottom edge (its contacts are covered by
+    check 4) and its solved open angle is a sensible one."""
+    err = []
+    lo = bounds(world_verts(objs["Stand"]))[0]
+    if lo[2] < 0.4:
+        err.append("8 closed stand reaches %.2f mm, below the bottom edge" % lo[2])
+    if not 10.0 <= math.degrees(alpha) <= 80.0:
+        err.append("8 stand opens to %.1f deg (want 10-80)" % math.degrees(alpha))
+    return err
+
+
 def outputs(L, out):
     """Check 7: glb size and dims.json against the layout."""
     err = []
     mb = os.path.getsize(os.path.join(out, "device.glb")) / 1e6
-    if mb > 2.5:
-        err.append("7 device.glb is %.2f MB (max 2.5)" % mb)
+    if mb > 1.5:
+        err.append("7 device.glb is %.2f MB (max 1.5)" % mb)
     d = json.load(open(os.path.join(out, "dims.json")))
     want = [round(L["W"], 2), round(L["H"], 2), L["D"]]
-    if d["body_mm"] != want or d["screen"] != L["screen"]:
-        err.append("7 dims.json says %s %s, layout %s %s" % (d["screen"], d["body_mm"], L["screen"], want))
+    if d["body_mm"] != want or d["design"] != L["name"]:
+        err.append("7 dims.json says %s %s, layout %s %s" % (d["design"], d["body_mm"], L["name"], want))
     return err

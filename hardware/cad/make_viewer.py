@@ -1,4 +1,4 @@
-"""Builds docs/device-3d.html: viewer.html with both models, their dims and the screen
+"""Builds docs/device-3d.html: viewer.html with the six designs' models, their dims and the screen
 images inlined (one self-contained file).
 
     python3 hardware/cad/make_viewer.py [--cad-out DIR] [--fragment PATH]
@@ -16,7 +16,9 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 PAGE = os.path.join(HERE, "..", "..", "docs", "device-3d.html")
 SCREENS = ("home", "listening", "answer", "tasks", "alert")
-MAX_MB = 7.0
+MAX_MB = 12.0
+sys.path.insert(0, HERE)
+from designs import DESIGNS  # noqa: E402
 
 
 def b64(path):
@@ -30,16 +32,14 @@ def arg(name, default=None):
 
 def main():
     cad_out = arg("--cad-out", os.path.join(HERE, "out"))
-    data = {"variants": {}, "screens": {}, "finishes": None}
-    for v in ("28", "24"):
+    data = {"order": list(DESIGNS), "designs": {}, "screens": {}}
+    for v in DESIGNS:
         for f in ("device.glb", "dims.json"):
             p = os.path.join(cad_out, v, f)
             if not os.path.exists(p):
-                sys.exit("make_viewer: missing %s — build it: blender -b -P hardware/cad/build_device.py -- --screen %s.%s"
-                         % (p, v[0], v[1]))
-        dims = json.load(open(os.path.join(cad_out, v, "dims.json")))
-        data["variants"][v] = {"dims": dims, "glb": b64(os.path.join(cad_out, v, "device.glb"))}
-        data["finishes"] = dims["finishes"]
+                sys.exit("make_viewer: missing %s — build it: blender -b -P hardware/cad/build_device.py -- --design %s" % (p, v))
+        data["designs"][v] = {"dims": json.load(open(os.path.join(cad_out, v, "dims.json"))),
+                              "glb": b64(os.path.join(cad_out, v, "device.glb"))}
     for s in SCREENS:
         data["screens"][s] = "data:image/png;base64," + b64(os.path.join(HERE, "screens", s + ".png"))
     tpl = open(os.path.join(HERE, "viewer.html")).read()
