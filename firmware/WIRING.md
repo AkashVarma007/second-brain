@@ -1,19 +1,17 @@
-# Second Brain — Wiring & Electrical Reference (Phase 2)
+# Second Brain — Wiring & Electrical Reference (NOG-OS UI)
 
-This documents the **Phase-2 electrical setup** exactly as wired in the Wokwi simulator.
+This documents the electrical setup **exactly as wired in the Wokwi simulator**, plus the
+pocket-build display it stands in for.
 
-**Source of truth:** [`firmware/diagram.json`](diagram.json) (the Wokwi netlist). It is kept in
-sync with two firmware files that must always agree with it:
+**Source of truth:** [`firmware/diagram.json`](diagram.json) (the Wokwi netlist). It must
+agree with [`ports/esp32s3/config.h`](ports/esp32s3/config.h), the pin `#define`s the
+firmware uses. If a GPIO changes, change both, then run `wokwi-cli lint .`.
 
-- [`ports/esp32s3/config.h`](ports/esp32s3/config.h) — the pin `#define`s the app code uses.
-- [`platformio.ini`](platformio.ini) — the `TFT_*` pin `#define`s the TFT_eSPI driver uses.
-
-If any GPIO number changes, it has to change in **all three** or the build and the simulation
-disagree silently. `wokwi-cli lint .` catches wires that point at pins that don't exist.
-
-> **Phase 2 = display + 3 buttons only.** No microphone, SD card, battery, or Wi-Fi radio
-> wiring yet. Those parts are specified in [`../HARDWARE_BRIEF.md`](../HARDWARE_BRIEF.md) and
-> summarised under [Future hardware](#future-hardware-phase-4-5) below.
+> **Scope:** 128×64 display + 7 buttons. No microphone, SD card, battery or Wi-Fi wiring yet.
+> Those parts are in [`../HARDWARE_BRIEF.md`](../HARDWARE_BRIEF.md).
+>
+> **Outdated elsewhere:** the 3D inspector ([`docs/wiring-3d.html`](../docs/wiring-3d.html))
+> and its GIF still show the earlier Phase-2 wiring (2.4" ILI9341 + 3 buttons).
 
 ---
 
@@ -21,61 +19,46 @@ disagree silently. `wokwi-cli lint .` catches wires that point at pins that don'
 
 | ID | Part | Interface | Notes |
 |----|------|-----------|-------|
-| `esp` | ESP32-S3-DevKitC-1 | — | MCU. Logic level **3.3 V**. |
-| `lcd` | ILI9341 2.4″ TFT, 240×320 | SPI | Write-only in this UI. Backlight active-**HIGH**. |
-| `btnDown` | Tactile push button (green) | GPIO | DOWN — moves cursor. |
-| `btnSelect` | Tactile push button (blue) | GPIO | SELECT — enters / confirms. |
-| `btnBack` | Tactile push button (red) | GPIO | BACK — up a level. |
+| `esp` | ESP32-S3-DevKitC-1 | — | Logic level **3.3 V**. |
+| `oled` | SSD1306 128×64 OLED (`board-ssd1306`) | I2C, address `0x3c` | Simulator/bench stand-in for the pocket build's ST7567 LCD. |
+| `btnUp` `btnDown` `btnLeft` `btnRight` | Push buttons (black) | GPIO | The 5-way joystick's directions. |
+| `btnOk` | Push button (yellow) | GPIO | Joystick centre press. |
+| `btnBack` | Push button (white) | GPIO | Up a level. |
+| `btnTalk` | Push button (red) | GPIO | Hold to talk — the firmware reads press **and** release. |
 
 ---
 
 ## Master connection list
 
-Every wire in `diagram.json`, grouped by function. **Colour** is the wire colour in the
-diagram so this table and the picture match.
+### Display (I2C)
 
-### Power & ground
+| From (`oled`) | To (ESP32-S3) | Colour | Function |
+|---|---|---|---|
+| `VCC` | 3.3 V (`3V3.1`) | red | Supply |
+| `GND` | `GND.1` | black | Ground |
+| `SDA` | **GPIO 8** | blue | I2C data |
+| `SCL` | **GPIO 9** | purple | I2C clock, 400 kHz |
 
-| From | To (ESP32-S3) | Wokwi rail | Colour | Function |
-|------|---------------|-----------|--------|----------|
-| `lcd:VCC` | 3.3 V | `3V3.1` | 🔴 red | Display supply |
-| `lcd:GND` | GND | `GND.1` | ⚫ black | Display ground |
-| `btnDown:2` | GND | `GND.2` | ⚫ black | Button return |
-| `btnSelect:2` | GND | `GND.3` | ⚫ black | Button return |
-| `btnBack:2` | GND | `GND.4` | ⚫ black | Button return |
+### Buttons (active-low, internal pull-up)
 
-### Display — SPI bus + control lines
+| Button | Signal → GPIO | Colour |
+|---|---:|---|
+| UP | **4** | green |
+| DOWN | **5** | green |
+| LEFT | **6** | green |
+| RIGHT | **7** | green |
+| OK | **15** | orange |
+| BACK | **16** | white |
+| TALK | **17** | red |
 
-| From (`lcd`) | To GPIO | Colour | Function |
-|--------------|--------:|--------|----------|
-| `MOSI` | **11** | 🔵 blue | SPI data, MCU → display |
-| `SCK` | **12** | 🟣 purple | SPI clock |
-| `MISO` | **13** | ⚪ gray | SPI data, display → MCU (unused by draw; wired for a complete bus) |
-| `CS` | **10** | 🟠 orange | SPI chip-select (active low) |
-| `D/C` | **7** | 🟢 green | Data / Command select |
-| `RST` | **6** | 🟡 yellow | Hardware reset |
-| `LED` | **14** | ⚪ white | Backlight enable (active HIGH) |
-
-SPI clock: **40 MHz** (`SPI_FREQUENCY=40000000`). Port: **FSPI / GPSPI2** — see
-[SPI notes](#spi-bus-notes).
-
-### Buttons — signal lines (active-low)
-
-| Button | Signal → GPIO | Colour | GND → rail |
-|--------|--------------:|--------|-----------|
-| DOWN | **4** | 🟢 green | `GND.2` |
-| SELECT | **5** | 🔵 blue | `GND.3` |
-| BACK | **15** | 🔴 red | `GND.4` |
+**Ground chain:** the board has only `GND.1`..`GND.4`, and Wokwi drops a second wire on the
+same named pin. So `btnUp:2.r` goes to `GND.2` and each button's `2.l` connects to the next
+button's `2.r` (Up → Left → OK → Right → Down → Back → Talk). Each button's two `2.*` legs are
+the same contact, so the chain is one ground net. On a real board, all buttons share a GND rail.
 
 ### Serial (simulator only)
 
-| From | To | Function |
-|------|----|---------|
-| `esp:TX` | `$serialMonitor:RX` | Firmware logs → Wokwi terminal |
-| `esp:RX` | `$serialMonitor:TX` | Terminal → firmware |
-
-This pair only exists to give the simulator a console. It is not part of the physical device
-wiring.
+`esp:TX` → `$serialMonitor:RX`, `esp:RX` → `$serialMonitor:TX`: the Wokwi console.
 
 ---
 
@@ -83,100 +66,47 @@ wiring.
 
 | GPIO | Used by | Direction |
 |-----:|---------|-----------|
-| 4 | Button DOWN | input, pull-up |
-| 5 | Button SELECT | input, pull-up |
-| 6 | TFT RST | output |
-| 7 | TFT D/C | output |
-| 10 | TFT CS | output |
-| 11 | TFT MOSI | output (SPI) |
-| 12 | TFT SCK | output (SPI) |
-| 13 | TFT MISO | input (SPI, idle) |
-| 14 | TFT backlight | output |
-| 15 | Button BACK | input, pull-up |
-
-10 GPIO used. The S3 DevKitC-1 has plenty left for the Phase 4/5 parts (SD shares the SPI bus
-and needs only one more CS; the mic needs 3 for I2S).
+| 4 | Button UP | input, pull-up |
+| 5 | Button DOWN | input, pull-up |
+| 6 | Button LEFT | input, pull-up |
+| 7 | Button RIGHT | input, pull-up |
+| 8 | OLED SDA | I2C |
+| 9 | OLED SCL | I2C |
+| 15 | Button OK | input, pull-up |
+| 16 | Button BACK | input, pull-up |
+| 17 | Button TALK | input, pull-up |
+| 10, 11, 12, 14, 21 | Reserved: ST7567 LCD (pocket build): CS, MOSI, SCK, DC, RST | SPI + control |
+| 13 | Reserved: claimed as MISO whenever hardware SPI starts — keep it free | — |
 
 ---
 
 ## Button circuit
 
-All three buttons are **active-low with the MCU's internal pull-up** — no external resistors.
-
-- Firmware: `pinMode(pin, INPUT_PULLUP)` ([`buttons.cpp`](ports/esp32s3/buttons.cpp)).
-- Idle the pin reads **HIGH**; pressing connects it to GND, so it reads **LOW**.
-- A press is the HIGH→LOW (falling) edge, with a **25 ms** debounce window in firmware.
-- In the simulator the parts set `bounce: 0` so the virtual buttons don't add contact bounce.
-
-```
-   3.3V
-    │
-   [internal pull-up ~45kΩ]     (inside the ESP32-S3)
-    │
-    ├──────────────► GPIO (4 / 5 / 15)   reads HIGH idle, LOW pressed
-    │
-   ─┴─  push button
-    │
-   GND (GND.2 / GND.3 / GND.4)
-```
-
-Each button gets **its own GND pin** (`GND.2`, `.3`, `.4`). On a real board they can share one
-ground rail; the separate pins here are because Wokwi drops a duplicate-named ground wire.
+All seven buttons are **active-low with the MCU's internal pull-up** (no external resistors):
+`pinMode(pin, INPUT_PULLUP)`, idle reads HIGH, pressed reads LOW, 25 ms debounce in
+[`buttons.cpp`](ports/esp32s3/buttons.cpp). A press is the HIGH→LOW edge; TALK also reports
+the LOW→HIGH edge as its release. In the simulator the parts set `bounce: 0`.
 
 ---
 
-## Power & ground
+## Pocket build: ST7567 LCD (SPI)
 
-- Everything runs at **3.3 V**. The display is fed from the DevKitC-1's `3V3` rail (`3V3.1`),
-  which the board's regulator supplies from USB 5 V.
-- The board exposes the 3.3 V rail as `3V3.1` / `3V3.2` and ground as `GND.1`…`GND.4`. There is
-  **no** plain `3V3` or `GND` pad name — naming one makes Wokwi silently drop that wire.
-- **Real-hardware flag:** GPIO 14 drives the backlight LED **directly** here. That is fine in
-  the simulator, but a physical panel's backlight can pull more current than a GPIO should
-  source — on the real build, drive it through a transistor or a series resistor, or confirm
-  the specific module has an onboard backlight driver.
-
----
-
-## SPI bus notes
-
-The display is on the ESP32-S3's **FSPI** peripheral, which resolves to hardware **GPSPI2**
-(register base `0x60024000`).
-
-`platformio.ini` sets **`-D USE_FSPI_PORT`**. This is **required**, not a preference: without it,
-TFT_eSPI's S3 header falls back to `SPI_PORT = FSPI = 1`, and the IDF macro
-`REG_SPI_BASE(1)` evaluates to `0`, so every SPI register write lands on address `0x0` and the
-first `tft.begin()` dies with `Guru Meditation Error: StoreProhibited, EXCVADDR: 0x00000000`.
-The full chain is documented in the comment on that flag in `platformio.ini`. This would crash
-real hardware too, not just the simulator.
+Not in Wokwi. Planned pins (reserved in `config.h`): SCK 12, MOSI 11, CS 10, DC 14, RST 21.
+Hardware SPI on the S3 always claims GPIO 11, 12 **and 13** (MISO, forced to input), so no
+control line may use them; `config.h` enforces this with a compile-time check.
+To switch, replace the SSD1306 constructor in [`display.cpp`](ports/esp32s3/display.cpp) with
+the commented ST7567 one matching your module (`_ENH_DG128064_`, `_JLX12864_` or
+`_OS12864_`), then **calibrate contrast** — it differs per panel. The ST7567's backlight LED
+should be driven through a transistor or a series resistor, not straight from a GPIO.
 
 ---
 
 ## Keeping it in sync
 
-Three files carry the pin numbers and **must agree**:
+| File | Holds |
+|---|---|
+| `diagram.json` | the physical wires (Wokwi) |
+| `ports/esp32s3/config.h` | the pins the firmware reads |
+| this file | the human-readable map |
 
-| File | Holds | Example |
-|------|-------|---------|
-| `diagram.json` | the physical wires (Wokwi) | `["lcd:CS", "esp:10", ...]` |
-| `ports/esp32s3/config.h` | pins the app logic reads | `#define PIN_TFT_CS 10` |
-| `platformio.ini` | pins the TFT_eSPI driver reads | `-D TFT_CS=10` |
-
-After any change: run **`wokwi-cli lint .`** (catches wires to non-existent pins — the failure
-mode that silently unpowered the display before), then `pio run -e esp32-s3` to confirm the
-driver defines still compile.
-
----
-
-## Future hardware (Phase 4–5)
-
-Not wired yet. Planned additions from [`../HARDWARE_BRIEF.md`](../HARDWARE_BRIEF.md):
-
-| Part | Interface | Pins needed | Note |
-|------|-----------|-------------|------|
-| microSD breakout | SPI (**shared** with the display) | +1 CS | Same MOSI/MISO/SCK as the TFT, separate CS. Possible bus contention while writing audio during a screen refresh — flagged for hardware review. |
-| INMP441 mic | I2S (own peripheral) | 3 (BCLK, WS, DATA) | Doesn't touch the SPI bus. |
-| LiPo + TP4056 | power | — | 3.7 V cell, charge/protect module; logic still 3.3 V. |
-
-When these land, add their wires to `diagram.json` (or the real schematic), extend the GPIO map
-above, and re-run the sync checks.
+After any change: `wokwi-cli lint .` (must report 0 errors), then `pio run -e esp32-s3`.

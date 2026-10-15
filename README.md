@@ -29,7 +29,7 @@
   <a href="#tech-stack"><img alt="TypeScript 6.0" src="https://img.shields.io/badge/TypeScript-6.0-3178C6?style=flat-square&logo=typescript&logoColor=white" /></a>
   <a href="#tech-stack"><img alt="Vite 8.1" src="https://img.shields.io/badge/Vite-8.1-646CFF?style=flat-square&logo=vite&logoColor=white" /></a>
   <a href="#architecture-protocol-first"><img alt="ESP32-S3" src="https://img.shields.io/badge/ESP32--S3-E7352C?style=flat-square&logo=espressif&logoColor=white" /></a>
-  <a href="#3-run-the-device-ui-simulated"><img alt="LVGL 8.4 in Wokwi" src="https://img.shields.io/badge/LVGL%208.4-Wokwi%20sim-e8590c?style=flat-square" /></a>
+  <a href="#3-run-the-device-ui-simulated"><img alt="u8g2 128x64 in Wokwi" src="https://img.shields.io/badge/u8g2-128%C3%9764%20mono-e8590c?style=flat-square" /></a>
 </p>
 
 </div>
@@ -57,6 +57,7 @@ brain whenever Wi-Fi is available.
 |---|---|---|
 | **1** | Laptop brain (Python) + React dashboard | ✅ **Complete** — works end to end |
 | **2** | Simulated device UI in Wokwi (LVGL, 3 buttons) | ✅ **Complete** — verified running in the simulator |
+| **2.5** | NOG-OS pocket UI: 128×64 mono, joystick + TALK, 15 screens, demo data | ✅ **UI built** — rendered on the laptop; Wokwi run pending a CI token |
 | **3** | Simulated device ↔ brain round-trip over Wi-Fi | ⏳ Next |
 | **4** | Real microphone + SD card | 🔒 Needs hardware |
 | **5** | Battery, enclosure, packaging | 🔒 Needs hardware |
@@ -66,75 +67,70 @@ Phases 1–3 cost nothing and validate most of the project before any parts are 
 Full design: [`docs/superpowers/specs/2026-07-21-second-brain-design.md`](docs/superpowers/specs/2026-07-21-second-brain-design.md).
 Hardware BOM and open questions: [`HARDWARE_BRIEF.md`](HARDWARE_BRIEF.md).
 
-### The device UI, running in the simulator
+### The device UI (NOG-OS)
 
-![Second Brain UI — all ten screens](docs/images/wokwi-screens.png)
+![NOG-OS — all fifteen screens on the 128×64 display](docs/images/nog-os-screens.png)
 
-Every screen above was captured from a real Wokwi run driven by the actual buttons, not
-mocked up. Reproduce it: [Run the device UI](#3-run-the-device-ui-simulated).
+Every screen above is drawn by the real firmware UI code, rendered on the laptop by
+`firmware/tools/render/render.sh` (4× scale, amber LCD tint). Demo data only for now.
+Reproduce it: [Run the device UI](#3-run-the-device-ui-simulated). The earlier Phase-2 LVGL
+screens are in [`docs/images/wokwi-screens.png`](docs/images/wokwi-screens.png).
 
 ### The wiring
 
-Every connection in the Phase-2 setup, colour-coded to match the actual wires in
+Every connection in the current setup, colour-coded to match the actual wires in
 [`firmware/diagram.json`](firmware/diagram.json):
 
 ```mermaid
 flowchart LR
-  DN(["DOWN"]):::bd
-  SE(["SELECT"]):::bs
-  BK(["BACK"]):::bb
+  UP(["UP"]):::btn
+  DN(["DOWN"]):::btn
+  LT(["LEFT"]):::btn
+  RT(["RIGHT"]):::btn
+  OK(["OK"]):::bok
+  BK(["BACK"]):::bback
+  TK(["TALK"]):::btalk
   ESP(["ESP32-S3"]):::mcu
-  LCD["ILI9341<br/>240×320 SPI"]:::part
+  OLED["SSD1306 OLED<br/>128×64 I2C"]:::part
   USB[/"USB serial"/]:::io
 
-  LCD ---|"VCC · 3V3.1"| ESP
-  LCD ---|"GND · GND.1"| ESP
-  LCD ---|"CS · GPIO10"| ESP
-  LCD ---|"RST · GPIO6"| ESP
-  LCD ---|"D/C · GPIO7"| ESP
-  LCD ---|"MOSI · GPIO11"| ESP
-  LCD ---|"SCK · GPIO12"| ESP
-  LCD ---|"LED · GPIO14"| ESP
-  LCD ---|"MISO · GPIO13"| ESP
-  DN ---|"GPIO4"| ESP
-  DN ---|"GND.2"| ESP
-  SE ---|"GPIO5"| ESP
-  SE ---|"GND.3"| ESP
-  BK ---|"GPIO15"| ESP
-  BK ---|"GND.4"| ESP
+  OLED ---|"VCC · 3V3.1"| ESP
+  OLED ---|"GND · GND.1"| ESP
+  OLED ---|"SDA · GPIO8"| ESP
+  OLED ---|"SCL · GPIO9"| ESP
+  UP ---|"GPIO4"| ESP
+  DN ---|"GPIO5"| ESP
+  LT ---|"GPIO6"| ESP
+  RT ---|"GPIO7"| ESP
+  OK ---|"GPIO15"| ESP
+  BK ---|"GPIO16"| ESP
+  TK ---|"GPIO17"| ESP
+  UP ---|"GND chain → GND.2"| ESP
   ESP ---|"TX"| USB
   ESP ---|"RX"| USB
 
   classDef mcu fill:#1f6f54,stroke:#0d3f30,color:#ffffff;
   classDef part fill:#12202b,stroke:#24333f,color:#d6e0ea;
-  classDef bd fill:#2a8843,stroke:#1c5c2e,color:#ffffff;
-  classDef bs fill:#3a63c0,stroke:#284a94,color:#ffffff;
-  classDef bb fill:#c1332f,stroke:#8f2420,color:#ffffff;
+  classDef btn fill:#2b2b33,stroke:#16161b,color:#ffffff;
+  classDef bok fill:#c99a1e,stroke:#8a6a12,color:#16161b;
+  classDef bback fill:#e6e6e6,stroke:#9a9a9a,color:#16161b;
+  classDef btalk fill:#c1332f,stroke:#8f2420,color:#ffffff;
   classDef io fill:#3a4650,stroke:#24333f,color:#e6ebf0;
 
   linkStyle 0 stroke:#e5484d,stroke-width:2px;
   linkStyle 1 stroke:#6b7280,stroke-width:2px;
-  linkStyle 2 stroke:#e8823a,stroke-width:2px;
-  linkStyle 3 stroke:#c99a1e,stroke-width:2px;
-  linkStyle 4 stroke:#2fa04a,stroke-width:2px;
-  linkStyle 5 stroke:#4a7bd6,stroke-width:2px;
-  linkStyle 6 stroke:#9a6bd6,stroke-width:2px;
-  linkStyle 7 stroke:#b9c0c8,stroke-width:2px;
-  linkStyle 8 stroke:#9aa2ab,stroke-width:2px;
-  linkStyle 9 stroke:#2fa04a,stroke-width:2px;
-  linkStyle 10 stroke:#6b7280,stroke-width:2px;
-  linkStyle 11 stroke:#4a7bd6,stroke-width:2px;
-  linkStyle 12 stroke:#6b7280,stroke-width:2px;
-  linkStyle 13 stroke:#e5484d,stroke-width:2px;
-  linkStyle 14 stroke:#6b7280,stroke-width:2px;
-  linkStyle 15 stroke:#2bb3ab,stroke-width:2px;
-  linkStyle 16 stroke:#2bb3ab,stroke-width:2px;
+  linkStyle 2 stroke:#4a7bd6,stroke-width:2px;
+  linkStyle 3 stroke:#9a6bd6,stroke-width:2px;
+  linkStyle 11 stroke:#6b7280,stroke-width:2px;
+  linkStyle 12 stroke:#2bb3ab,stroke-width:2px;
+  linkStyle 13 stroke:#2bb3ab,stroke-width:2px;
 ```
 
 Full pin map, net list, power and gotchas: [`firmware/WIRING.md`](firmware/WIRING.md).
 
 Want to rotate it in 3D and hover each wire? The clip below is a preview — **click it** to open
-the live inspector:
+the live inspector. **Outdated:** it still shows the Phase-2 wiring (ILI9341 + 3 buttons) and
+has not been redone for the 128×64 display and 7 buttons yet.
 
 [![Rotating 3D view of the wiring: ESP32-S3, ILI9341 display and three buttons joined by colour-coded wires](docs/images/wiring-3d.gif)](https://akashvarma007.github.io/second-brain/wiring-3d.html)
 
@@ -170,7 +166,7 @@ swapped without touching the others:
 |------|------|--------|
 | `brain/` | Python FastAPI server — Whisper + Ollama + SQLite | ✅ Phase 1 |
 | `web/` | React + Vite + TypeScript monitoring dashboard | ✅ Phase 1 |
-| `firmware/` | ESP32-S3 firmware (LVGL UI), runs in the Wokwi simulator | ✅ Phase 2 |
+| `firmware/` | ESP32-S3 firmware (NOG-OS UI on u8g2), runs in the Wokwi simulator | ✅ Phase 2.5 (UI) |
 | `docs/` | Design spec + notes | ✅ |
 | `HARDWARE_BRIEF.md` | Hardware BOM + open questions (for hardware review) | ✅ |
 
@@ -234,8 +230,15 @@ It expects the brain on port 8000 — override with `VITE_API_BASE` in `web/.env
 
 ## 3. Run the device UI (simulated)
 
-No ESP32 needed — the firmware runs in the [Wokwi](https://wokwi.com) simulator against a
-virtual ILI9341 display and three virtual buttons.
+No ESP32 needed. The firmware runs in the [Wokwi](https://wokwi.com) simulator against a
+virtual 128×64 SSD1306 OLED and seven virtual buttons, and every screen can also be rendered
+straight on the laptop:
+
+```bash
+cd firmware
+pio run -e esp32-s3          # first build also downloads u8g2
+tools/render/render.sh       # .pio/renders/NN-<screen>.png + sheet.png
+```
 
 ```bash
 cd firmware
@@ -247,13 +250,14 @@ Then either:
 - **VS Code:** install the Wokwi extension, open `firmware/`, start the simulation.
   `wokwi.toml` and `diagram.json` are already set up.
 - **CLI (headless, scriptable):** see
-  [`firmware/README.md`](firmware/README.md#automated-ui-regression-run). It drives all three
+  [`firmware/README.md`](firmware/README.md#automated-ui-regression-run). It drives all seven
   buttons through every screen and saves a screenshot of each. Needs a free Wokwi CI token.
 
-**Controls:** `DOWN` moves the cursor, `SELECT` enters/confirms, `BACK` goes up a level.
+**Controls:** `OK` opens the menu and selects, the d-pad moves (and from Home jumps to
+NOG / Notes / Quests / Recap), `BACK` goes up a level, hold `TALK` to "record".
 
-In Phase 2 the "transcribed text" is a hardcoded sample string. Phase 3 replaces it with a
-real response from the brain.
+The UI runs on demo data: recording, the AI result and sync are stand-ins. Phase 3 connects
+it to the brain.
 
 ## 4. Run the tests
 
@@ -265,6 +269,8 @@ cd brain && .venv/bin/python -m pytest -m slow
 
 # firmware — navigation/menu/input logic on the host, no simulator
 cd firmware && pio test -e native
+# firmware — draw every screen on the host; fails if any text overflows
+cd firmware && tools/render/render.sh
 
 # firmware — compile check for the actual board
 cd firmware && pio run -e esp32-s3
@@ -286,22 +292,18 @@ it. `CORS_ORIGINS` defaults to the Vite dev ports (`localhost:5173`, `127.0.0.1:
 **Wokwi display blank / serial terminal empty** — run `wokwi-cli lint .` from `firmware/`
 first. Wokwi *silently drops* any wire naming a pin the part doesn't have, so a diagram that
 parses fine as JSON can still leave the display unpowered. On `board-esp32-s3-devkitc-1` the
-rails are `3V3.1`, `3V3.2`, `5V`, `GND.1`..`GND.4` — there is no plain `3V3` or `GND`, and
-every ground wire needs its own numbered pin. The serial monitor also stays blank unless
+rails are `3V3.1`, `3V3.2`, `5V`, `GND.1`..`GND.4` — there is no plain `3V3` or `GND`. With
+only four ground pins, the seven buttons share one by daisy-chaining their ground legs. The serial monitor also stays blank unless
 `esp:TX`/`esp:RX` are wired to `$serialMonitor`.
 
 **Wokwi boot-loops** — `wokwi.toml` must point at the bare `firmware.bin`. Wokwi flashes it
 at `0x10000` itself; a merged bootloader+app image does not work.
 
-**Firmware panics in `tft.begin()` with `StoreProhibited` / `EXCVADDR: 0x00000000`** —
-`-D USE_FSPI_PORT` is missing from `platformio.ini`. TFT_eSPI's ESP32-S3 fallback resolves
-the SPI register base to address 0. See the comment on that flag for the full chain.
-
 ## Tech stack
 
 - **Brain:** Python, FastAPI, [faster-whisper](https://github.com/SYSTRAN/faster-whisper) (`small.en`), [Ollama](https://ollama.com) (`llama3.2:3b`), SQLite
 - **Dashboard:** React, Vite, TypeScript
-- **Device:** ESP32-S3, Arduino framework, PlatformIO, LVGL 8.4, TFT_eSPI, tested in the [Wokwi](https://wokwi.com) simulator
+- **Device:** ESP32-S3, Arduino framework, PlatformIO, [u8g2](https://github.com/olikraus/u8g2) on a 128×64 mono display, tested in the [Wokwi](https://wokwi.com) simulator
 - **Link:** HTTP over Wi-Fi (cloudflared tunnel to reach the laptop from the simulator)
 
 ## License

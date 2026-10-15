@@ -1,45 +1,65 @@
 #pragma once
-#include <string>
+#include <cstdint>
 #include <vector>
 
 namespace sb {
 
-enum class Priority { High, Medium, Low };
+// One input from the 5-way joystick, BACK or the hold-to-talk button.
+// TALK is the only key that reports its release.
+enum class Event { Up, Down, Left, Right, Ok, Back, TalkDown, TalkUp };
 
-struct Task {
-    std::string title;
-    Priority priority = Priority::Medium;
-};
-
-enum class Screen {
+enum class ScreenId {
     Home,
-    NotesMenu,
-    NoteResult,
-    NoteConfirm,
-    TasksMenu,
-    TaskResult,
-    TaskList,
+    Menu,
+    Talk,
+    Recording,
+    Thinking,
+    Result,
+    Notes,
+    Quests,
+    Pet,
+    Evo,
+    Recap,
+    Sync,
+    Setup,
+    Sleep,
 };
 
-enum class Event { Down, Select, Back };
-
-// The full UI model the renderer draws. Owned and mutated only by Nav.
+// The whole UI model the renderer draws. Owned and mutated only by Router.
 struct UiState {
-    Screen screen = Screen::Home;
-    int cursor = 0;                    // highlighted index on list/menu screens
-    std::vector<std::string> notes;    // saved notes (newest last)
-    std::vector<Task> tasks;           // saved tasks (newest last)
-    std::string pendingNote;           // note text awaiting Save/Discard
-    Task pendingTask;                  // task awaiting confirmation
+    ScreenId screen = ScreenId::Home;
+    std::vector<ScreenId> stack;  // where BACK returns to; top = back()
+    int menuSel = 0;
+    int listSel = 0;              // selection on Notes / Quests / Setup
+    uint8_t questsDone = 0;       // bit i set = demo quest i ticked
+    int resultIdx = 0;            // demo result shown on the Result screen
+    int resultsShown = 0;
+    const char* popup = nullptr;  // overlay text, '\n' splits lines
+    uint32_t popupUntilMs = 0;
+    uint32_t recStartMs = 0;
+    uint32_t thinkUntilMs = 0;
+    uint32_t lastInputMs = 0;
+    uint32_t nowMs = 0;           // last time seen; the renderer derives animation frames from it
 };
 
-inline const char* priority_label(Priority p) {
-    switch (p) {
-        case Priority::High: return "HIGH";
-        case Priority::Medium: return "MEDIUM";
-        case Priority::Low: return "LOW";
+inline const char* screen_name(ScreenId s) {
+    switch (s) {
+        case ScreenId::Home: return "Home";
+        case ScreenId::Menu: return "Menu";
+        case ScreenId::Talk: return "Talk";
+        case ScreenId::Recording: return "Recording";
+        case ScreenId::Thinking: return "Thinking";
+        case ScreenId::Result: return "Result";
+        case ScreenId::Notes: return "Notes";
+        case ScreenId::Quests: return "Quests";
+        case ScreenId::Pet: return "Pet";
+        case ScreenId::Evo: return "Evo";
+        case ScreenId::Recap: return "Recap";
+        case ScreenId::Sync: return "Sync";
+        case ScreenId::Setup: return "Setup";
+        case ScreenId::Sleep: return "Sleep";
     }
-    return "MEDIUM";
+    return "?";
 }
 
 }  // namespace sb

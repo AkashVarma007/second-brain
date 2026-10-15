@@ -1,77 +1,94 @@
-# Firmware (ESP32-S3, simulated in Wokwi)
+# Firmware (ESP32-S3) — NOG-OS UI
 
-A 3-button notes/tasks menu UI built with LVGL on an ILI9341 display. Phase 2 has no
-microphone or networking — a hardcoded sample string stands in for transcribed text.
+The pocket UI of Second Brain: NOG the pixel pet, a Flipper-style menu and 15 screens on a
+128×64 monochrome display, driven by a 5-way joystick, BACK and a hold-to-talk button.
+This build is **UI only**: notes, quests, results and sync are demo data, nothing is saved
+and there is no microphone or networking yet.
+
+Design: [`docs/superpowers/specs/2026-10-14-nog-os-ui-design.md`](../docs/superpowers/specs/2026-10-14-nog-os-ui-design.md).
 
 ## Architecture
 
-- `core/` — framework-free C++ (domain types, menu helpers, navigation state machine).
-  Compiles and unit-tests on the laptop with **no simulator**.
-- `hal/` — hardware interfaces (`IInput`).
-- `ports/esp32s3/` — TFT_eSPI + LVGL display, GPIO buttons, pin map.
-- `ports/native/` — host stubs for testing.
-- `app/ui/` — renders the core's UI state into LVGL widgets (pure presentation).
-- `src/main.cpp` — wires it together for the ESP32-S3.
+- `core/` — framework-free C++: `Router` (which screen shows, list selection, the
+  hold-to-talk flow, pop-up and sleep timers) and `demo.h` (demo content). Time is passed in,
+  so it unit-tests on the laptop.
+- `app/ui/` — draws every screen with the **u8g2 C API** (`u8g2_t*`): `ui.cpp` (screens),
+  `gfx.*` (drawing kit), `sprites.h` (pixel art as `'#'` rows — edit them directly).
+  Because it only needs u8g2's portable C core, the same code also renders on the laptop.
+- `hal/` — `IInput`.
+- `ports/esp32s3/` — the panel (`display.cpp`), the 7 buttons and the pin map.
+- `ports/native/` — host stubs for tests.
+- `tools/render/` — host render tool: every screen to PNG, no board or simulator.
+- `src/main.cpp` — buttons → `Router`, 400 ms animation tick, redraw.
 
 ## Build
 
 ```bash
 cd firmware
-pio run -e esp32-s3        # compile the firmware
+pio run -e esp32-s3        # compile the firmware (first run downloads u8g2)
 ```
 
-## Test the logic (no hardware, no simulator)
+## Test
 
 ```bash
-pio test -e native         # runs the nav/menu/input unit tests on the host
+pio test -e native         # Router + menu + input logic on the host
+tools/render/render.sh     # draws all 15 screens to .pio/renders/*.png + sheet.png
 ```
+
+`render.sh` also self-checks the drawing kit and **fails if any demo text overflows its
+slot**. It needs `g++` and `python3` and the u8g2 copy that `pio run -e esp32-s3` downloads.
+
+## Controls
+
+| Key | Home | Menu | Lists (Notes, Quests, Setup) |
+|---|---|---|---|
+| OK | open menu | open app | Quests: tick / untick |
+| UP / DOWN | NOG card / Notes | move | move |
+| LEFT / RIGHT | Quests / Recap | back / open | — |
+| BACK | — | Home | up a level |
+| TALK (hold) | record from anywhere; release → thinking → result | | |
+
+NOG card: OK opens Evolution. Result: OK keeps it (Home), BACK "undoes" it (Talk screen).
+20 s idle on Home and NOG falls asleep; any key wakes it.
+
+## Display: simulator vs pocket build
+
+Wokwi has no ST7567, so the simulator (and a bench build) uses an **SSD1306 128×64 OLED over
+I2C** — same resolution, same UI. The pocket build uses an **ST7567 128×64 LCD over SPI**:
+swap the panel constructor in `ports/esp32s3/display.cpp` (the line is there, commented) and
+calibrate its contrast. Pins for both are in `ports/esp32s3/config.h`; wiring in
+[`WIRING.md`](WIRING.md).
 
 ## Run in the Wokwi simulator
 
-Open the `firmware/` folder in VS Code with the Wokwi extension, or use the Wokwi CLI.
-`wokwi.toml` points at the built `firmware.bin` (a bare application image — Wokwi
-flashes it at 0x10000 itself; do **not** feed it a merged bootloader image, that
-boot-loops). Controls: the DOWN button moves the cursor, SELECT enters/confirms,
-BACK goes up a level.
-
-Pin map (matches `diagram.json`): TFT CS=10, MOSI=11, SCK=12, MISO=13, DC=7, RST=6,
-BL=14; buttons DOWN=4, SELECT=5, BACK=15.
+Open `firmware/` in VS Code with the Wokwi extension, or use the CLI. `wokwi.toml` points at
+the bare `firmware.bin` (Wokwi flashes it at 0x10000 itself; a merged bootloader image
+boot-loops).
 
 ### Automated UI regression run
 
-`nav_scenario.yaml` drives all three buttons through every screen and screenshots
-each one. It is the only check that covers the *rendered* UI — `pio test -e native`
-stops at `core/`. Needs [`wokwi-cli`](https://github.com/wokwi/wokwi-cli/releases)
-and a CI token from <https://wokwi.com/dashboard/ci> (a Wokwi Club *license* key is
-a different thing and will not authenticate).
+`screens_scenario.yaml` drives all 7 buttons through every screen and screenshots each one.
+Needs [`wokwi-cli`](https://github.com/wokwi/wokwi-cli/releases) and a CI token from
+<https://wokwi.com/dashboard/ci> (a Wokwi Club *license* key will not authenticate).
 
 ```bash
 pio run -e esp32-s3
 wokwi-cli lint .                      # catches dropped wires; must report 0 errors
-WOKWI_CLI_TOKEN=<token> wokwi-cli --timeout 30000 --timeout-exit-code 0 \
-  --scenario nav_scenario.yaml --serial-log-file .pio/wokwi-serial.log .
-grep 'screen=' .pio/wokwi-serial.log   # the expected transition trace
+WOKWI_CLI_TOKEN=<token> wokwi-cli --timeout 60000 --timeout-exit-code 0 \
+  --scenario screens_scenario.yaml --serial-log-file .pio/wokwi-serial.log .
+grep 'screen=' .pio/wokwi-serial.log   # the transition trace
 ```
 
-Screenshots land in `.pio/` (gitignored) as `wokwi-shot-*.png`. Expected trace:
+Screenshots land in `.pio/` (gitignored) as `wokwi-shot-NN-<screen>.png`. Expected trace:
 
 ```
-screen=Home cursor=0
-screen=Home cursor=1 notes=0 tasks=0      # DOWN
-screen=Home cursor=0 notes=0 tasks=0      # DOWN wraps
-screen=NotesMenu    ...                   # SELECT
-screen=NoteResult   ...
-screen=NoteConfirm  ...
-screen=Home cursor=0 notes=1 tasks=0      # SELECT on Save -> note stored
-screen=Home cursor=1 notes=1 tasks=0
-screen=TasksMenu    ...
-screen=TaskResult   ...
-screen=TaskList cursor=0 notes=1 tasks=1
-screen=Home cursor=0 notes=1 tasks=1      # BACK
+screen=Home → Menu → Talk → Recording → Thinking → Result → Home → Notes → Home
+→ Quests → Home → Pet → Evo → Pet → Home → Recap → Home → Menu → Sync → Menu
+→ Setup → Menu → Home → Sleep
 ```
 
-`wokwi-cli lint` matters: Wokwi silently drops any connection that names a pin the
-part does not have. On `board-esp32-s3-devkitc-1` the rails are `3V3.1`, `3V3.2`,
-`5V` and `GND.1`..`GND.4` — there is no plain `3V3` or `GND`, and each ground wire
-needs its own `GND.n`. The serial terminal also stays blank unless `esp:TX`/`esp:RX`
+`wokwi-cli lint` matters: Wokwi silently drops any connection that names a pin the part
+does not have. On `board-esp32-s3-devkitc-1` the rails are `3V3.1`, `3V3.2`, `5V` and
+`GND.1`..`GND.4`; there is no plain `3V3` or `GND`. The seven buttons share `GND.2` by
+daisy-chaining their ground legs. The serial terminal stays blank unless `esp:TX`/`esp:RX`
 are wired to `$serialMonitor`.

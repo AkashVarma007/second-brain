@@ -1,48 +1,47 @@
 #include <Arduino.h>
-#include <lvgl.h>
-#include "config.h"
-#include "display_tft.h"
 #include "buttons.h"
-#include "nav.h"
+#include "display.h"
+#include "router.h"
 #include "ui.h"
 
 using namespace sb;
 
 static Buttons buttons;
-static Nav nav(SAMPLE_NOTE, Task{SAMPLE_TASK_TITLE, SAMPLE_TASK_PRIORITY});
-
-static const char* screen_name(Screen s) {
-    switch (s) {
-        case Screen::Home: return "Home";
-        case Screen::NotesMenu: return "NotesMenu";
-        case Screen::NoteResult: return "NoteResult";
-        case Screen::NoteConfirm: return "NoteConfirm";
-        case Screen::TasksMenu: return "TasksMenu";
-        case Screen::TaskResult: return "TaskResult";
-        case Screen::TaskList: return "TaskList";
-    }
-    return "?";
-}
+static Router router;
+static uint32_t lastFrame = UINT32_MAX;
+static ScreenId lastScreen = ScreenId::Home;
 
 void setup() {
     Serial.begin(115200);
     delay(100);
-    Serial.println("Second Brain UI booting");
-    sb::display::begin();
+    Serial.println("NOG-OS booting");
+    display::begin();
     buttons.begin();
-    ui::render(nav.ui());
-    Serial.printf("screen=%s cursor=%d\n", screen_name(nav.ui().screen), nav.ui().cursor);
+    Serial.printf("screen=%s\n", screen_name(router.ui().screen));
 }
 
 void loop() {
+    const uint32_t now = millis();
+    bool changed = false;
     Event e;
-    if (buttons.poll(e)) {
-        nav.handle(e);
-        ui::render(nav.ui());
-        Serial.printf("event=%d -> screen=%s cursor=%d notes=%d tasks=%d\n",
-                      (int)e, screen_name(nav.ui().screen), nav.ui().cursor,
-                      (int)nav.ui().notes.size(), (int)nav.ui().tasks.size());
+    while (buttons.poll(e)) {
+        router.handle(e, now);
+        changed = true;
     }
-    lv_timer_handler();
+    router.tick(now);
+
+    const ScreenId screen = router.ui().screen;
+    if (screen != lastScreen) {
+        lastScreen = screen;
+        Serial.printf("screen=%s\n", screen_name(screen));
+    }
+
+    // Redraw on input and on every animation frame (pet bob, waveform, timers).
+    const uint32_t frame = now / kFrameMs;
+    if (changed || frame != lastFrame) {
+        lastFrame = frame;
+        ui::render(display::gfx(), router.ui());
+        display::flush();
+    }
     delay(5);
 }

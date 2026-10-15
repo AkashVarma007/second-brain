@@ -1,0 +1,183 @@
+# Wokwi scenario: drives the 7 buttons through every NOG-OS screen and
+# screenshots each one. The host render tool (tools/render/render.sh) checks
+# the drawing; only this run proves the I2C display and GPIO wiring.
+#
+# Run it (needs a Wokwi CI token from https://wokwi.com/dashboard/ci):
+#   pio run -e esp32-s3
+#   WOKWI_CLI_TOKEN=<token> wokwi-cli --timeout 60000 --timeout-exit-code 0 \
+#     --scenario screens_scenario.yaml --serial-log-file .pio/wokwi-serial.log .
+#   grep 'screen=' .pio/wokwi-serial.log
+#
+# Presses are driven by `delay`, never `wait-serial`: the firmware logs within
+# ~5 ms of a press, so a wait-serial placed after the press always misses it.
+# A press is held 150 ms; the buttons debounce at 25 ms.
+
+name: NOG-OS screens
+version: 1
+author: Second Brain
+
+steps:
+  - wait-serial: "screen=Home"
+  - delay: 600ms
+  - take-screenshot: { part-id: oled, save-to: .pio/wokwi-shot-01-home.png }
+
+  # OK -> Menu, DOWN -> NOTES highlighted
+  - set-control: { part-id: btnOk, control: pressed, value: 1 }
+  - delay: 150ms
+  - set-control: { part-id: btnOk, control: pressed, value: 0 }
+  - delay: 400ms
+  - set-control: { part-id: btnDown, control: pressed, value: 1 }
+  - delay: 150ms
+  - set-control: { part-id: btnDown, control: pressed, value: 0 }
+  - delay: 400ms
+  - take-screenshot: { part-id: oled, save-to: .pio/wokwi-shot-02-menu.png }
+
+  # UP -> TALK, OK -> Talk screen
+  - set-control: { part-id: btnUp, control: pressed, value: 1 }
+  - delay: 150ms
+  - set-control: { part-id: btnUp, control: pressed, value: 0 }
+  - delay: 400ms
+  - set-control: { part-id: btnOk, control: pressed, value: 1 }
+  - delay: 150ms
+  - set-control: { part-id: btnOk, control: pressed, value: 0 }
+  - delay: 400ms
+  - take-screenshot: { part-id: oled, save-to: .pio/wokwi-shot-03-talk.png }
+
+  # Hold TALK: Recording; release: Thinking; 2.2 s later: Result
+  - set-control: { part-id: btnTalk, control: pressed, value: 1 }
+  - delay: 2500ms
+  - take-screenshot: { part-id: oled, save-to: .pio/wokwi-shot-04-recording.png }
+  - set-control: { part-id: btnTalk, control: pressed, value: 0 }
+  - delay: 600ms
+  - take-screenshot: { part-id: oled, save-to: .pio/wokwi-shot-05-thinking.png }
+  - delay: 2400ms
+  - take-screenshot: { part-id: oled, save-to: .pio/wokwi-shot-06-result.png }
+
+  # OK -> Home, DOWN -> Notes
+  - set-control: { part-id: btnOk, control: pressed, value: 1 }
+  - delay: 150ms
+  - set-control: { part-id: btnOk, control: pressed, value: 0 }
+  - delay: 400ms
+  - set-control: { part-id: btnDown, control: pressed, value: 1 }
+  - delay: 150ms
+  - set-control: { part-id: btnDown, control: pressed, value: 0 }
+  - delay: 400ms
+  - take-screenshot: { part-id: oled, save-to: .pio/wokwi-shot-07-notes.png }
+  - set-control: { part-id: btnBack, control: pressed, value: 1 }
+  - delay: 150ms
+  - set-control: { part-id: btnBack, control: pressed, value: 0 }
+  - delay: 400ms
+
+  # LEFT -> Quests; tick quest 1, wait out its pop-up, move to quest 2
+  - set-control: { part-id: btnLeft, control: pressed, value: 1 }
+  - delay: 150ms
+  - set-control: { part-id: btnLeft, control: pressed, value: 0 }
+  - delay: 400ms
+  - set-control: { part-id: btnOk, control: pressed, value: 1 }
+  - delay: 150ms
+  - set-control: { part-id: btnOk, control: pressed, value: 0 }
+  - delay: 1800ms
+  - set-control: { part-id: btnDown, control: pressed, value: 1 }
+  - delay: 150ms
+  - set-control: { part-id: btnDown, control: pressed, value: 0 }
+  - delay: 400ms
+  - take-screenshot: { part-id: oled, save-to: .pio/wokwi-shot-08-quests.png }
+
+  # Tick quest 2: the pop-up shows
+  - set-control: { part-id: btnOk, control: pressed, value: 1 }
+  - delay: 150ms
+  - set-control: { part-id: btnOk, control: pressed, value: 0 }
+  - delay: 300ms
+  - take-screenshot: { part-id: oled, save-to: .pio/wokwi-shot-09-quest-done.png }
+  - delay: 1500ms
+  - set-control: { part-id: btnBack, control: pressed, value: 1 }
+  - delay: 150ms
+  - set-control: { part-id: btnBack, control: pressed, value: 0 }
+  - delay: 400ms
+
+  # UP -> NOG card, OK -> Evolution
+  - set-control: { part-id: btnUp, control: pressed, value: 1 }
+  - delay: 150ms
+  - set-control: { part-id: btnUp, control: pressed, value: 0 }
+  - delay: 400ms
+  - take-screenshot: { part-id: oled, save-to: .pio/wokwi-shot-10-pet.png }
+  - set-control: { part-id: btnOk, control: pressed, value: 1 }
+  - delay: 150ms
+  - set-control: { part-id: btnOk, control: pressed, value: 0 }
+  - delay: 400ms
+  - take-screenshot: { part-id: oled, save-to: .pio/wokwi-shot-11-evolution.png }
+  - set-control: { part-id: btnBack, control: pressed, value: 1 }
+  - delay: 150ms
+  - set-control: { part-id: btnBack, control: pressed, value: 0 }
+  - delay: 400ms
+  - set-control: { part-id: btnBack, control: pressed, value: 1 }
+  - delay: 150ms
+  - set-control: { part-id: btnBack, control: pressed, value: 0 }
+  - delay: 400ms
+
+  # RIGHT -> Recap
+  - set-control: { part-id: btnRight, control: pressed, value: 1 }
+  - delay: 150ms
+  - set-control: { part-id: btnRight, control: pressed, value: 0 }
+  - delay: 400ms
+  - take-screenshot: { part-id: oled, save-to: .pio/wokwi-shot-12-recap.png }
+  - set-control: { part-id: btnBack, control: pressed, value: 1 }
+  - delay: 150ms
+  - set-control: { part-id: btnBack, control: pressed, value: 0 }
+  - delay: 400ms
+
+  # Menu: DOWN x5 -> SYNC, then SETUP
+  - set-control: { part-id: btnOk, control: pressed, value: 1 }
+  - delay: 150ms
+  - set-control: { part-id: btnOk, control: pressed, value: 0 }
+  - delay: 400ms
+  - set-control: { part-id: btnDown, control: pressed, value: 1 }
+  - delay: 150ms
+  - set-control: { part-id: btnDown, control: pressed, value: 0 }
+  - delay: 250ms
+  - set-control: { part-id: btnDown, control: pressed, value: 1 }
+  - delay: 150ms
+  - set-control: { part-id: btnDown, control: pressed, value: 0 }
+  - delay: 250ms
+  - set-control: { part-id: btnDown, control: pressed, value: 1 }
+  - delay: 150ms
+  - set-control: { part-id: btnDown, control: pressed, value: 0 }
+  - delay: 250ms
+  - set-control: { part-id: btnDown, control: pressed, value: 1 }
+  - delay: 150ms
+  - set-control: { part-id: btnDown, control: pressed, value: 0 }
+  - delay: 250ms
+  - set-control: { part-id: btnDown, control: pressed, value: 1 }
+  - delay: 150ms
+  - set-control: { part-id: btnDown, control: pressed, value: 0 }
+  - delay: 250ms
+  - set-control: { part-id: btnOk, control: pressed, value: 1 }
+  - delay: 150ms
+  - set-control: { part-id: btnOk, control: pressed, value: 0 }
+  - delay: 400ms
+  - take-screenshot: { part-id: oled, save-to: .pio/wokwi-shot-13-sync.png }
+  - set-control: { part-id: btnBack, control: pressed, value: 1 }
+  - delay: 150ms
+  - set-control: { part-id: btnBack, control: pressed, value: 0 }
+  - delay: 400ms
+  - set-control: { part-id: btnDown, control: pressed, value: 1 }
+  - delay: 150ms
+  - set-control: { part-id: btnDown, control: pressed, value: 0 }
+  - delay: 400ms
+  - set-control: { part-id: btnOk, control: pressed, value: 1 }
+  - delay: 150ms
+  - set-control: { part-id: btnOk, control: pressed, value: 0 }
+  - delay: 400ms
+  - take-screenshot: { part-id: oled, save-to: .pio/wokwi-shot-14-setup.png }
+  - set-control: { part-id: btnBack, control: pressed, value: 1 }
+  - delay: 150ms
+  - set-control: { part-id: btnBack, control: pressed, value: 0 }
+  - delay: 400ms
+  - set-control: { part-id: btnBack, control: pressed, value: 1 }
+  - delay: 150ms
+  - set-control: { part-id: btnBack, control: pressed, value: 0 }
+  - delay: 400ms
+
+  # 20 s idle on Home -> NOG falls asleep
+  - delay: 21000ms
+  - take-screenshot: { part-id: oled, save-to: .pio/wokwi-shot-15-sleep.png }
